@@ -1,0 +1,62 @@
+name: exp01
+seed: 42
+tasks: [vol_5d, dir_5d, rank_5d]
+models: [naive, linear, lgbm]
+data:
+  start: "2010-01-01"
+  end: "2026-10-01"
+  cache_dir: data/raw
+  tickers:
+    - SPY
+    - AAPL
+    - MSFT
+    - AMZN
+    - GOOGL
+    - NVDA
+    - AMD
+    - INTC
+    - CSCO
+    - IBM
+    - QCOM
+    - ADBE
+    - NFLX
+    - DIS
+    - CMCSA
+    - HD
+    - NKE
+    - MCD
+    - JPM
+    - BAC
+    - WFC
+    - GS
+    - MS
+    - AXP
+    - JNJ
+    - PFE
+    - MRK
+    - UNH
+    - ABT
+    - AMGN
+    - LLY
+    - XOM
+    - CVX
+    - PG
+    - KO
+    - PEP
+    - WMT
+    - COST
+    - BA
+    - CAT
+    - HON
+    - GE
+    - UNP
+    - UPS
+    - T
+    - VZ
+splits:
+  train_months: 60
+  val_months: 6
+  test_months: 12
+  step_months: 12
+  min_folds: 5
+out_dir: reports
