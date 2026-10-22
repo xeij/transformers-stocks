@@ -38,7 +38,8 @@ keep fold k iff test.end <= last available bar  ->  data through 2026-10 gives k
 ```
 
 A sample is `(ticker, t)`. Its target uses bars `t+1 .. t+H`; `target_end(t)` is the date of bar
-`t+H`. Block membership (the purge is the `target_end` condition):
+`t+H`, taken as the max across tickers on date `t` because the rank target mixes tickers. Block
+membership (the purge is the `target_end` condition):
 
 ```
 train: train.start <= t  and  target_end(t) <  train.end     # target realised before val starts
@@ -103,14 +104,18 @@ computed from bars `<= its date`, so the window contains no information after `t
    percentile rank in (0, 1] across the whole universe (SPY included) per date.
 8. Naive per task: vol -> random walk (`rv_5`); dir -> train majority class with probability =
    class frequency; rank -> train mean (constant; IC reported as 0).
-9. Linear = ridge (regression) / logistic (dir), regularisation picked on val from
-   `{0.01, 0.1, 1, 10, 100}` (alpha for ridge, 1/C for logistic). LightGBM early-stopped on val.
+9. Linear = ridge (regression) / logistic (dir) on standardised features. The penalty is on the
+   per-sample scale, lambda in `{1e-4, 1e-3, 1e-2, 1e-1, 1}` (ridge alpha = lambda*n, logistic
+   C = 1/(lambda*n)), picked on val by squared error (Brier for dir). LightGBM: 2000 trees max,
+   lr 0.02, 31 leaves, min 100 samples per leaf, 0.8 row/column subsampling, early stop 100 on
+   val. No hyperparameter search beyond that; the baselines are deliberately plain.
 10. DM test: per-date mean loss differential across tickers (removes cross-sectional correlation
     from the series), then a HAC (Newey-West, lag H-1 = 4) t-test on its mean. Reported per fold
     and pooled over all test dates. Losses: squared error (vol, rank), Brier (dir). No small-sample
     correction (about 250 dates per fold).
-11. "Spearman IC" and "rank IC" are the same statistic; the report gives Pearson IC and Spearman
-    IC per date, with the mean and a HAC t-stat for each.
+11. "Spearman IC" and "rank IC" are the same statistic. The report gives, per date, the Pearson
+    IC and the Spearman IC of the prediction against the rank target (Spearman against the raw
+    return is identical), then the mean across dates and a HAC t-stat for each.
 12. Rows with any NaN feature are dropped once; rows with a NaN target are dropped per task only
     (the dir dead zone removes rows from the dir task, nothing else).
 13. Seeds: `seed` in config feeds numpy, LightGBM and (phase 2) torch. Manifest records config

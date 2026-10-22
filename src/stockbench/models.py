@@ -20,6 +20,7 @@ class Naive:
 
     def fit(self, X, y, X_val, y_val):
         self.const = float(np.mean(y))
+        self.info = {}
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -54,13 +55,14 @@ class Linear:
         return pipe.predict(X)
 
     def fit(self, X, y, X_val, y_val):
-        best = (np.inf, None)
+        best = (np.inf, None, None)
         for lam in self.GRID:
             pipe = self._make(lam, len(X)).fit(X, y)
             loss = float(np.mean((np.asarray(y_val, float) - self._predict(pipe, X_val)) ** 2))
             if loss < best[0]:
-                best = (loss, pipe)
+                best = (loss, pipe, lam)
         self.pipe = best[1]
+        self.info = {"lambda": best[2]}
         return self
 
     def predict(self, X) -> np.ndarray:
@@ -89,6 +91,7 @@ class LGBM:
             eval_y=y_val,
             callbacks=[lgb.early_stopping(100, verbose=False)],
         )
+        self.info = {"n_iter": int(self.model.best_iteration_ or self.model.n_estimators)}
         return self
 
     def predict(self, X) -> np.ndarray:

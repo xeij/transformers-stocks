@@ -62,8 +62,9 @@ def run(cfg: Config, source: Source = fetch_yfinance) -> Path:
                      len(Xva), len(Xte), f.test_start.date(), f.test_end.date())  # fmt: skip
             for name in cfg.models:
                 t0 = time.time()
-                p = make_model(name, task, cfg.seed).fit(Xtr, ytr, Xva, yva).predict(Xte)
-                log.info("  %-6s %.1fs", name, time.time() - t0)
+                m = make_model(name, task, cfg.seed).fit(Xtr, ytr, Xva, yva)
+                p = m.predict(Xte)
+                log.info("  %-6s %.1fs %s", name, time.time() - t0, m.info)
                 preds.append(
                     pd.DataFrame(
                         {
@@ -189,7 +190,8 @@ def render_summary(cfg, P, M, D, manifest) -> str:
         f"test {cfg.splits.test_months}m, step {cfg.splits.step_months}m; test blocks "
         f"{manifest['folds'][0]['test_start']}..{manifest['folds'][-1]['test_end']}.",
         "",
-        "Metrics are mean +- std across test folds. DM = Diebold-Mariano statistic on the pooled "
+        "Metrics are mean +- std across test folds (`*_tstat` columns are HAC t-stats of the mean "
+        "daily IC over the pooled test dates). DM = Diebold-Mariano statistic on the pooled "
         "per-date loss differential (negative = the row's model has lower loss than the baseline), "
         "HAC lag 4; `folds<.05` counts folds where that sign holds with p < 0.05. Losses: squared "
         "error on log vol / rank, Brier for direction. `linear` is ridge for vol/rank and logistic "
@@ -204,6 +206,10 @@ def render_summary(cfg, P, M, D, manifest) -> str:
         for model in cfg.models:
             cells = [model]
             for met in names:
+                if met.endswith("_tstat"):  # a t-stat only makes sense on the pooled series
+                    v = _sel(pooled, task=task, model=model, metric=met)["value"].iloc[0]
+                    cells.append(f"{v:.2f}")
+                    continue
                 v = _sel(per_fold, task=task, model=model, metric=met)["value"]
                 cells.append(f"{v.mean():.4f} +- {v.std():.4f}")
             for base in BASELINES:

@@ -1,0 +1,175 @@
+{
+  "name": "exp01",
+  "config_hash": "b0c3a23cd0d0",
+  "config": {
+    "name": "exp01",
+    "seed": 42,
+    "tasks": [
+      "vol_5d",
+      "dir_5d",
+      "rank_5d"
+    ],
+    "models": [
+      "naive",
+      "linear",
+      "lgbm"
+    ],
+    "data": {
+      "tickers": [
+        "SPY",
+        "AAPL",
+        "MSFT",
+        "AMZN",
+        "GOOGL",
+        "NVDA",
+        "AMD",
+        "INTC",
+        "CSCO",
+        "IBM",
+        "QCOM",
+        "ADBE",
+        "NFLX",
+        "DIS",
+        "CMCSA",
+        "HD",
+        "NKE",
+        "MCD",
+        "JPM",
+        "BAC",
+        "WFC",
+        "GS",
+        "MS",
+        "AXP",
+        "JNJ",
+        "PFE",
+        "MRK",
+        "UNH",
+        "ABT",
+        "AMGN",
+        "LLY",
+        "XOM",
+        "CVX",
+        "PG",
+        "KO",
+        "PEP",
+        "WMT",
+        "COST",
+        "BA",
+        "CAT",
+        "HON",
+        "GE",
+        "UNP",
+        "UPS",
+        "T",
+        "VZ"
+      ],
+      "start": "2010-01-01",
+      "end": "2026-10-01",
+      "cache_dir": "data/raw"
+    },
+    "splits": {
+      "train_months": 60,
+      "val_months": 6,
+      "test_months": 12,
+      "step_months": 12,
+      "min_folds": 5
+    },
+    "out_dir": "reports"
+  },
+  "git_sha": "14b745a1b10915ca8cc1032e3b03cb82ff4d5954",
+  "git_dirty": true,
+  "generated_at": "2026-10-22T21:58:53+00:00",
+  "data_start": "2010-04-06",
+  "data_end": "2026-09-30",
+  "n_rows": 190787,
+  "n_features": 43,
+  "n_folds": 11,
+  "folds": [
+    {
+      "k": 0,
+      "train_start": "2010-01-01",
+      "val_start": "2015-01-01",
+      "test_start": "2015-07-01",
+      "test_end": "2016-07-01"
+    },
+    {
+      "k": 1,
+      "train_start": "2011-01-01",
+      "val_start": "2016-01-01",
+      "test_start": "2016-07-01",
+      "test_end": "2017-07-01"
+    },
+    {
+      "k": 2,
+      "train_start": "2012-01-01",
+      "val_start": "2017-01-01",
+      "test_start": "2017-07-01",
+      "test_end": "2018-07-01"
+    },
+    {
+      "k": 3,
+      "train_start": "2013-01-01",
+      "val_start": "2018-01-01",
+      "test_start": "2018-07-01",
+      "test_end": "2019-07-01"
+    },
+    {
+      "k": 4,
+      "train_start": "2014-01-01",
+      "val_start": "2019-01-01",
+      "test_start": "2019-07-01",
+      "test_end": "2020-07-01"
+    },
+    {
+      "k": 5,
+      "train_start": "2015-01-01",
+      "val_start": "2020-01-01",
+      "test_start": "2020-07-01",
+      "test_end": "2021-07-01"
+    },
+    {
+      "k": 6,
+      "train_start": "2016-01-01",
+      "val_start": "2021-01-01",
+      "test_start": "2021-07-01",
+      "test_end": "2022-07-01"
+    },
+    {
+      "k": 7,
+      "train_start": "2017-01-01",
+      "val_start": "2022-01-01",
+      "test_start": "2022-07-01",
+      "test_end": "2023-07-01"
+    },
+    {
+      "k": 8,
+      "train_start": "2018-01-01",
+      "val_start": "2023-01-01",
+      "test_start": "2023-07-01",
+      "test_end": "2024-07-01"
+    },
+    {
+      "k": 9,
+      "train_start": "2019-01-01",
+      "val_start": "2024-01-01",
+      "test_start": "2024-07-01",
+      "test_end": "2025-07-01"
+    },
+    {
+      "k": 10,
+      "train_start": "2020-01-01",
+      "val_start": "2025-01-01",
+      "test_start": "2025-07-01",
+      "test_end": "2026-07-01"
+    }
+  ],
+  "python": "3.11.16",
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "3.1.0",
+    "scikit-learn": "1.9.1",
+    "lightgbm": "4.7.0",
+    "statsmodels": "0.15.0",
+    "yfinance": "1.7.0"
+  }
+}
