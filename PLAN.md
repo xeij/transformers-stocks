@@ -121,6 +121,28 @@ computed from bars `<= its date`, so the window contains no information after `t
 13. Seeds: `seed` in config feeds numpy, LightGBM and (phase 2) torch. Manifest records config
     hash, git sha, data range, library versions.
 
+14. LSTM: 2 layers x 64 hidden, dropout 0.2 between layers and before the head; the last hidden
+    state feeds a linear output.
+15. PatchTST: channel-independent. Each of the 43 feature channels is cut into 15 patches
+    (length 8, stride 4), linearly embedded to d_model 64 with a learnable positional embedding,
+    and run through 2 pre-norm encoder layers (4 heads, FFN 128, GELU, dropout 0.3) shared across
+    channels. A shared flatten head (15 x 64 -> 1) reads one number per channel and a linear mixer
+    over the 43 channels gives the output. No RevIN: the level of inputs such as `rv_5` is signal
+    for these targets, not nuisance.
+16. Net training: standardised features clipped to +-5; regression targets standardised with train
+    stats; MSE or BCE-with-logits; Adam lr 1e-3, batch 512, gradient clipping 1.0; up to 20 epochs,
+    early stopping on val loss with patience 3 and best-epoch restore. Seeds `[0, 1, 2]` are three
+    separate runs each; the report shows the across-seed mean and the seed std, and the DM test is
+    run per seed.
+17. Device: Apple GPU via MPS. Seeds fix initialisation, shuffling and dropout masks; CPU runs are
+    bitwise reproducible (tested), MPS kernels are not guaranteed to be, see the report for the
+    measured discrepancy.
+18. Rows without a full 64-bar window (the first 63 bars of each ticker) are dropped from the
+    sequence models' training set only; a val or test row without a window raises.
+19. macOS: the torch wheel bundles its own `libomp.dylib` and LightGBM links Homebrew's; two
+    OpenMP runtimes in one process hang or segfault. `scripts/fix_macos_venv.sh` points torch at
+    the Homebrew copy (and clears the hidden flag some process keeps putting on `.venv`).
+
 ## Phases
 
 1. Scaffold, loader + cache, features, targets, splitter, leakage tests, naive/linear/lgbm,

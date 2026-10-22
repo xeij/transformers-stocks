@@ -7,6 +7,7 @@ from stockbench.config import SplitConfig
 from stockbench.data import market_frame
 from stockbench.features import build_features
 from stockbench.models import make_model
+from stockbench.nets import make_panel
 from stockbench.splits import walk_forward
 from stockbench.targets import HORIZON, build_targets
 from tests.conftest import TICKERS
@@ -102,3 +103,21 @@ def test_model_scaler_is_fit_on_train_rows_only():
     m = make_model("linear", "vol_5d", seed=0).fit(X, y, X_val, y)
     np.testing.assert_allclose(m.scaler.mean_, X.mean().values)
     np.testing.assert_allclose(m.scaler.scale_, X.std(ddof=0).values)
+
+
+def test_sequence_windows_use_only_rows_up_to_t_of_the_same_ticker(prices, universe):
+    L = 16
+    X = build_features(universe, market_frame(prices))
+    df, panel = make_panel(X, list(X.columns), lookback=L)
+    dates = df.index.get_level_values("date").to_numpy()
+    tickers = df.index.get_level_values("ticker").to_numpy()
+    W = panel.windows(panel.F)  # (N - L + 1, L, d) zero-copy view
+    ok = panel.has_window()
+    assert (~ok).sum() == len(TICKERS) * (L - 1)  # the first L-1 rows of every ticker
+    for r in np.flatnonzero(ok)[::97]:
+        w = W[r - L + 1]
+        np.testing.assert_array_equal(w, panel.F[r - L + 1 : r + 1])  # rows t-L+1 .. t, bit for bit
+        assert (tickers[r - L + 1 : r + 1] == tickers[r]).all()
+        assert (dates[r - L + 1 : r + 1] <= dates[r]).all() and dates[r - L + 1] < dates[r]
+    for r in np.flatnonzero(~ok):  # rows without a full window are never windowed
+        assert panel.pos[r] < L - 1

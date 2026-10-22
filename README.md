@@ -15,6 +15,7 @@ links against (`brew install libomp`).
 
 ```bash
 uv sync
+sh scripts/fix_macos_venv.sh   # macOS only, see below
 uv run pytest
 uv run python -m stockbench run --config configs/exp01.yaml
 ```
@@ -52,6 +53,8 @@ and Phase 3 (long/short backtest with costs) are not started.
 Known limitations: the universe is today's large caps with history since 2010, so the panel has
 survivorship bias; yfinance adjusted prices are the only source wired up.
 
-If `import stockbench` fails inside the venv with "No module named stockbench", something on the
-machine has set the macOS hidden flag on `.venv`, and Python skips hidden `.pth` files. Run
-`chflags -R nohidden .venv`.
+`scripts/fix_macos_venv.sh` works around two macOS problems. The torch wheel bundles its own
+`libomp.dylib` while LightGBM links Homebrew's, and two OpenMP runtimes in one process hang or
+segfault, so the script points torch at the Homebrew copy. It also clears the macOS hidden flag
+that some process keeps setting on `.venv`, which makes Python skip the editable-install `.pth`
+file ("No module named stockbench"). Rerun it after any `uv sync` that reinstalls torch.

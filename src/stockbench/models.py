@@ -9,7 +9,10 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+from stockbench.config import NetConfig
 from stockbench.targets import TASKS
+
+SEQ_MODELS = ("lstm", "patchtst")
 
 
 class Naive:
@@ -100,11 +103,15 @@ class LGBM:
         return self.model.predict(X)
 
 
-def make_model(name: str, task: str, seed: int):
+def make_model(name: str, task: str, seed: int, nets: NetConfig | None = None):
     if name == "naive":
         return Naive(task)
     if name == "linear":
         return Linear(task, seed)
     if name == "lgbm":
         return LGBM(task, seed)
+    if name in SEQ_MODELS:
+        from stockbench.nets import SeqModel  # torch import kept out of the tabular path
+
+        return SeqModel(name, task, seed, nets or NetConfig())
     raise KeyError(f"unknown model {name!r}")

@@ -1,0 +1,80 @@
+name: exp02
+seed: 42
+tasks: [vol_5d, dir_5d, rank_5d]
+models: [naive, linear, lgbm, lstm, patchtst]
+data:
+  start: "2010-01-01"
+  end: "2026-10-01"
+  cache_dir: data/raw
+  tickers:
+    - SPY
+    - AAPL
+    - MSFT
+    - AMZN
+    - GOOGL
+    - NVDA
+    - AMD
+    - INTC
+    - CSCO
+    - IBM
+    - QCOM
+    - ADBE
+    - NFLX
+    - DIS
+    - CMCSA
+    - HD
+    - NKE
+    - MCD
+    - JPM
+    - BAC
+    - WFC
+    - GS
+    - MS
+    - AXP
+    - JNJ
+    - PFE
+    - MRK
+    - UNH
+    - ABT
+    - AMGN
+    - LLY
+    - XOM
+    - CVX
+    - PG
+    - KO
+    - PEP
+    - WMT
+    - COST
+    - BA
+    - CAT
+    - HON
+    - GE
+    - UNP
+    - UPS
+    - T
+    - VZ
+splits:
+  train_months: 60
+  val_months: 6
+  test_months: 12
+  step_months: 12
+  min_folds: 5
+out_dir: reports
+nets:
+  lookback: 64
+  batch_size: 512
+  max_epochs: 20
+  patience: 3
+  lr: 0.001
+  seeds: [0, 1, 2]
+  device: auto
+  clip: 5.0
+  lstm_hidden: 64
+  lstm_layers: 2
+  lstm_dropout: 0.2
+  patch_len: 8
+  patch_stride: 4
+  d_model: 64
+  n_heads: 4
+  n_layers: 2
+  dropout: 0.3
