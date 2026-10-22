@@ -1,10 +1,10 @@
 # exp01: walk-forward results
 
-Generated 2026-10-22T21:58:53+00:00 | config `b0c3a23cd0d0` | git `14b745a1b1` (dirty)
+Generated 2026-10-22T22:02:06+00:00 | config `b0c3a23cd0d0` | git `90b7b56822`
 
 Samples 2010-04-06..2026-09-30, 190787 rows x 43 features, 46 tickers. 11 folds: train 60m / val 6m / test 12m, step 12m; test blocks 2015-07-01..2026-07-01.
 
-Metrics are mean +- std across test folds. DM = Diebold-Mariano statistic on the pooled per-date loss differential (negative = the row's model has lower loss than the baseline), HAC lag 4; `folds<.05` counts folds where that sign holds with p < 0.05. Losses: squared error on log vol / rank, Brier for direction. `linear` is ridge for vol/rank and logistic for direction.
+Metrics are mean +- std across test folds (`*_tstat` columns are HAC t-stats of the mean daily IC over the pooled test dates). DM = Diebold-Mariano statistic on the pooled per-date loss differential (negative = the row's model has lower loss than the baseline), HAC lag 4; `folds<.05` counts folds where that sign holds with p < 0.05. Losses: squared error on log vol / rank, Brier for direction. `linear` is ridge for vol/rank and logistic for direction.
 
 ## vol_5d (regression)
 
@@ -60,9 +60,9 @@ Per-fold `accuracy`:
 
 | model | ic | rank_ic | ic_tstat | rank_ic_tstat | DM vs naive | folds<.05 | DM vs lgbm | folds<.05 |
 |---|---|---|---|---|---|---|---|---|
-| naive | 0.0000 +- 0.0000 | 0.0000 +- 0.0000 | 0.0000 +- 0.0000 | 0.0000 +- 0.0000 | - | - | -2.49 (p=0.013) | 2/11 |
-| linear | 0.0117 +- 0.0263 | 0.0141 +- 0.0287 | 0.4369 +- 0.8892 | 0.5564 +- 0.9873 | +0.38 (p=0.707) | 0/11 | -1.86 (p=0.063) | 0/11 |
-| lgbm | 0.0059 +- 0.0286 | 0.0086 +- 0.0273 | 0.2707 +- 1.2078 | 0.4419 +- 1.2210 | +2.49 (p=0.013) | 2/11 | - | - |
+| naive | 0.0000 +- 0.0000 | 0.0000 +- 0.0000 | 0.00 | 0.00 | - | - | -2.49 (p=0.013) | 2/11 |
+| linear | 0.0117 +- 0.0263 | 0.0141 +- 0.0287 | 1.37 | 1.64 | +0.38 (p=0.707) | 0/11 | -1.86 (p=0.063) | 0/11 |
+| lgbm | 0.0059 +- 0.0286 | 0.0086 +- 0.0273 | 0.77 | 1.15 | +2.49 (p=0.013) | 2/11 | - | - |
 
 Per-fold `rank_ic`:
 

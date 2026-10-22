@@ -76,9 +76,9 @@
     },
     "out_dir": "reports"
   },
-  "git_sha": "14b745a1b10915ca8cc1032e3b03cb82ff4d5954",
-  "git_dirty": true,
-  "generated_at": "2026-10-22T21:58:53+00:00",
+  "git_sha": "90b7b56822105c4de6a1d33de064f3275b050ea8",
+  "git_dirty": false,
+  "generated_at": "2026-10-22T22:02:06+00:00",
   "data_start": "2010-04-06",
   "data_end": "2026-09-30",
   "n_rows": 190787,
