@@ -135,8 +135,8 @@ computed from bars `<= its date`, so the window contains no information after `t
     separate runs each; the report shows the across-seed mean and the seed std, and the DM test is
     run per seed.
 17. Device: Apple GPU via MPS. Seeds fix initialisation, shuffling and dropout masks; CPU runs are
-    bitwise reproducible (tested), MPS kernels are not guaranteed to be, see the report for the
-    measured discrepancy.
+    bitwise reproducible (tested). PyTorch does not guarantee MPS determinism, but repeated fits of
+    both nets on MPS produced bitwise identical predictions on the development machine.
 18. Rows without a full 64-bar window (the first 63 bars of each ticker) are dropped from the
     sequence models' training set only; a val or test row without a window raises.
 19. macOS: the torch wheel bundles its own `libomp.dylib` and LightGBM links Homebrew's; two

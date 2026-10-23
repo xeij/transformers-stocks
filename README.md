@@ -46,9 +46,18 @@ test block.
 
 ## Status
 
-Phase 1 is done: data cache, features, targets, splitter, leakage tests, naive / ridge-logistic /
-LightGBM baselines, metrics, DM tests, CLI, first report. Phase 2 (LSTM and PatchTST, multi-seed)
-and Phase 3 (long/short backtest with costs) are not started.
+Phases 1 and 2 are done: data cache, features, targets, splitter, leakage tests, naive /
+ridge-logistic / LightGBM baselines, metrics, DM tests, CLI, and the LSTM and PatchTST sequence
+models trained on 64-bar windows pooled across tickers with three seeds each. Phase 3 (long/short
+backtest with costs) is not started.
+
+Results so far, from `reports/exp02/summary.md` (11 test years, 2015-07 to 2026-07): ridge is the
+best volatility model (RMSE 0.495 against 0.634 for the random-walk naive and 0.508 for LightGBM);
+PatchTST ties LightGBM (0.510, DM t = +0.7) and the LSTM trails both. Direction and cross-sectional
+rank are null results for every model: nothing beats the base rate on direction, and the only rank
+IC with a t-stat above 2 (LSTM, 0.019) comes with a squared error significantly worse than the
+constant predictor. A full exp02 run takes about ten hours on an Apple M5 laptop, nearly all of it
+PatchTST; interrupted runs resume from the per-fit cache.
 
 Known limitations: the universe is today's large caps with history since 2010, so the panel has
 survivorship bias; yfinance adjusted prices are the only source wired up.
