@@ -22,8 +22,10 @@ uv run python -m stockbench run --config configs/exp01.yaml
 
 The first run downloads daily bars for the 46-ticker universe from yfinance into `data/raw/`
 (gitignored, cached as one parquet per ticker). Results land in `reports/exp01/`:
-`predictions.parquet`, `metrics.parquet`, `dm.parquet`, `summary.md`, and `manifest.json`
-(config hash, git sha, data range, library versions).
+`predictions.parquet`, `metrics.parquet`, `dm.parquet`, `backtest.parquet`, `plots/`,
+`summary.md`, and `manifest.json` (config hash, git sha, data range, library versions).
+`configs/exp02.yaml` adds the LSTM and PatchTST; its fits are cached one parquet each under
+`reports/exp02/cache/`, so an interrupted run resumes.
 
 ## How it works
 
@@ -44,20 +46,30 @@ argument for why sequence lookbacks cannot leak.
 features before the cutoff are unchanged, and it asserts no train or validation target overlaps a
 test block.
 
+The backtest turns the direction and rank predictions into a dollar-neutral book: on each test
+date it goes equal-weight long the top decile of predictions and short the bottom decile, holds
+each book for five days with capital spread across the five live books, and charges 10 bps per
+unit of notional traded. A constant prediction takes no positions, so the naive strategies sit
+flat. SPY buy-and-hold over the same days is the benchmark.
+
 ## Status
 
-Phases 1 and 2 are done: data cache, features, targets, splitter, leakage tests, naive /
-ridge-logistic / LightGBM baselines, metrics, DM tests, CLI, and the LSTM and PatchTST sequence
-models trained on 64-bar windows pooled across tickers with three seeds each. Phase 3 (long/short
-backtest with costs) is not started.
+All three phases are done: data cache, features, targets, splitter, leakage tests, naive /
+ridge-logistic / LightGBM baselines, metrics, DM tests, CLI; the LSTM and PatchTST sequence
+models trained on 64-bar windows pooled across tickers with three seeds each; and the long/short
+backtest with costs and the figures. `reports/exp02/summary.md` is the full report.
 
-Results so far, from `reports/exp02/summary.md` (11 test years, 2015-07 to 2026-07): ridge is the
-best volatility model (RMSE 0.495 against 0.634 for the random-walk naive and 0.508 for LightGBM);
-PatchTST ties LightGBM (0.510, DM t = +0.7) and the LSTM trails both. Direction and cross-sectional
-rank are null results for every model: nothing beats the base rate on direction, and the only rank
-IC with a t-stat above 2 (LSTM, 0.019) comes with a squared error significantly worse than the
-constant predictor. A full exp02 run takes about ten hours on an Apple M5 laptop, nearly all of it
-PatchTST; interrupted runs resume from the per-fit cache.
+Results (11 test years, 2015-07 to 2026-07): ridge is the best volatility model (RMSE 0.495
+against 0.634 for the random-walk naive and 0.508 for LightGBM); PatchTST ties LightGBM (0.510,
+DM t = +0.7) and the LSTM trails both. Direction and cross-sectional rank are null results for
+every model: nothing beats the base rate on direction, and the only rank IC with a t-stat above 2
+(LSTM, 0.019) comes with a squared error significantly worse than the constant predictor. In the
+backtest no strategy survives costs: every decile book loses money net of 10 bps per side
+(annualised -0.1% to -18%, Sharpe -0.8 to +0.1) while SPY buy-and-hold returns 14.2% a year at
+Sharpe 0.83. Turnover of 100 to 150 units of capital a year costs 10 to 15 points of return, and
+the best gross Sharpe (LSTM on rank, 0.51 +- 0.22 across seeds) is below SPY's before costs. A
+full exp02 run takes about ten hours on an Apple M5 laptop, nearly all of it PatchTST;
+interrupted runs resume from the per-fit cache.
 
 Known limitations: the universe is today's large caps with history since 2010, so the panel has
 survivorship bias; yfinance adjusted prices are the only source wired up.

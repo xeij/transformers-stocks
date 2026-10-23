@@ -16,6 +16,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from stockbench import plots
+from stockbench.backtest import COST_BPS, backtest_table
 from stockbench.config import Config, config_hash, fit_hash
 from stockbench.data import MARKET, Source, fetch_yfinance, load_prices, market_frame
 from stockbench.eval import dm_test, metrics, sample_loss
@@ -23,12 +25,22 @@ from stockbench.features import build_features
 from stockbench.models import SEQ_MODELS, make_model
 from stockbench.nets import make_panel
 from stockbench.splits import walk_forward
-from stockbench.targets import TASKS, build_targets
+from stockbench.targets import HORIZON, TASKS, build_targets
 
 log = logging.getLogger("stockbench")
 POOLED = -1  # fold id for rows computed over all test folds together
 BASELINES = ("naive", "lgbm")
 PRED_COLS = ["task", "model", "seed", "fold", "date", "ticker", "y_true", "y_pred", "fwd_ret_5d"]
+PRIMARY = {"vol_5d": "rmse", "dir_5d": "accuracy", "rank_5d": "rank_ic"}
+BT_COLS = [  # column, header, format
+    ("ann_return_net", "ann. return (net)", "+.1%"),
+    ("sharpe_net", "Sharpe (net)", "+.2f"),
+    ("max_dd_net", "max DD (net)", ".1%"),
+    ("tstat_net", "HAC t (net)", "+.2f"),
+    ("ann_return_gross", "ann. return (gross)", "+.1%"),
+    ("sharpe_gross", "Sharpe (gross)", "+.2f"),
+    ("turnover", "turnover / yr", ".1f"),
+]
 
 
 def run(cfg: Config, source: Source = fetch_yfinance) -> Path:
@@ -61,7 +73,8 @@ def run(cfg: Config, source: Source = fetch_yfinance) -> Path:
         valid = df[task].notna().to_numpy()
         y_all = df[task].to_numpy(dtype=float)
         for f in folds:
-            tr, va, te = (m & valid for m in f.assign(dates, df["target_end"]))
+            tr, va, te = f.assign(dates, df["target_end"])
+            tr, va = tr & valid, va & valid  # test keeps unlabelled rows for the backtest
             Xtr, Xva, Xte = (df.loc[m, feature_cols] for m in (tr, va, te))
             ytr, yva, yte = (df.loc[m, task] for m in (tr, va, te))
             log.info("%s fold %d: train %d val %d test %d (test %s..%s)", task, f.k, len(Xtr),
@@ -97,10 +110,25 @@ def run(cfg: Config, source: Source = fetch_yfinance) -> Path:
     P = pd.concat(preds, ignore_index=True)[PRED_COLS]
     M = metrics_table(P)
     D = dm_table(P)
+    B, curves = backtest_table(P, prices)
+    log.info("backtest: %d strategies", len(B))
 
     P.to_parquet(out / "predictions.parquet", index=False)
     M.to_parquet(out / "metrics.parquet", index=False)
     D.to_parquet(out / "dm.parquet", index=False)
+    B.to_parquet(out / "backtest.parquet", index=False)
+    curves.to_parquet(out / "backtest_daily.parquet", index=False)
+    figs = out / "plots"
+    figs.mkdir(exist_ok=True)
+    labels = [str(f.test_start.date())[:7] for f in folds]
+    for task in cfg.tasks:
+        plots.fold_metric(fold_pivot(M, task)[cfg.models], labels,
+                          f"{task}: {PRIMARY[task]} per test fold, seed-averaged", PRIMARY[task],
+                          figs / f"fold_{task}.png")  # fmt: skip
+    for task in list(dict.fromkeys(B["task"])):
+        plots.wealth(curves[curves["task"] == task],
+                     f"{task}: long/short decile book, net of {COST_BPS:.0f} bps per side",
+                     figs / f"wealth_{task}.png")  # fmt: skip
     manifest = {
         "name": cfg.name,
         "config_hash": config_hash(cfg),
@@ -138,13 +166,14 @@ def run(cfg: Config, source: Source = fetch_yfinance) -> Path:
         },  # fmt: skip
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
-    (out / "summary.md").write_text(render_summary(cfg, M, D, manifest))
+    (out / "summary.md").write_text(render_summary(cfg, M, D, manifest, B))
     log.info("wrote %s", out)
     return out
 
 
 def metrics_table(P: pd.DataFrame) -> pd.DataFrame:
     """Long table: task, model, seed, fold (POOLED = all folds), metric, value."""
+    P = P[P["y_true"].notna()]  # direction rows inside the dead zone are predicted but not scored
     rows = []
     for (task, model, seed, fold), g in P.groupby(["task", "model", "seed", "fold"], sort=False):
         rows += [{"task": task, "model": model, "seed": seed, "fold": fold, "metric": k,
@@ -157,6 +186,7 @@ def metrics_table(P: pd.DataFrame) -> pd.DataFrame:
 
 def dm_table(P: pd.DataFrame) -> pd.DataFrame:
     """DM test of every (model, seed) against each baseline, per fold and pooled over all dates."""
+    P = P[P["y_true"].notna()]
     rows = []
     key = ["fold", "date", "ticker"]
     for task, g in P.groupby("task", sort=False):
@@ -178,6 +208,12 @@ def dm_table(P: pd.DataFrame) -> pd.DataFrame:
                     rows.append({"task": task, "model": col[0], "seed": col[1], "baseline": base,
                                  "fold": int(k), "stat": stat, "pvalue": p})  # fmt: skip
     return pd.DataFrame(rows)
+
+
+def fold_pivot(M: pd.DataFrame, task: str, metric: str | None = None) -> pd.DataFrame:
+    """fold x model table of the seed-averaged metric (default: the task's primary one)."""
+    pf = _sel(M[M["fold"] != POOLED], task=task, metric=metric or PRIMARY[task])
+    return pf.groupby(["fold", "model"])["value"].mean().unstack("model")
 
 
 def _git(*args: str) -> str:
@@ -211,7 +247,7 @@ def _dm_cells(d: pd.DataFrame) -> list[str]:
     return [txt, f"{len(sig)}/{len(pf)}"]
 
 
-def render_summary(cfg, M, D, manifest) -> str:
+def render_summary(cfg, M, D, manifest, B=None) -> str:
     per_fold = M[M["fold"] != POOLED]
     pooled = M[M["fold"] == POOLED]
     sha = manifest["git_sha"][:10] or "n/a"
@@ -274,9 +310,8 @@ def render_summary(cfg, M, D, manifest) -> str:
                 cells += ["-", "-"] if d.empty else _dm_cells(d)
             lines.append("| " + " | ".join(cells) + " |")
         lines.append("")
-        primary = "rank_ic" if task == "rank_5d" else names[0]
-        pf = _sel(per_fold, task=task, metric=primary)
-        pf = pf.groupby(["fold", "model"])["value"].mean().unstack("model")
+        primary = PRIMARY[task]
+        pf = fold_pivot(M, task)
         pooled_row = _sel(pooled, task=task, metric=primary).groupby("model")["value"].mean()
         head = "| fold | test block | " + " | ".join(cfg.models) + " |"
         lines += [f"Per-fold `{primary}` (seed-averaged):", "", head]
@@ -285,5 +320,46 @@ def render_summary(cfg, M, D, manifest) -> str:
             vals = " | ".join(f"{pf.loc[f['k'], m]:.4f}" for m in cfg.models)
             lines.append(f"| {f['k']} | {f['test_start']}..{f['test_end']} | {vals} |")
         vals = " | ".join(f"{pooled_row[m]:.4f}" for m in cfg.models)
-        lines += [f"| pooled | all | {vals} |", ""]
+        lines += [f"| pooled | all | {vals} |", "", f"![per fold](plots/fold_{task}.png)", ""]
+    if B is not None and len(B):
+        lines += render_backtest(cfg, B)
     return "\n".join(lines)
+
+
+def render_backtest(cfg, B) -> list[str]:
+    lines = [
+        f"## Backtest: long/short decile book, {HORIZON}-day holding, {COST_BPS:.0f} bps per side",
+        "",
+        "Each test date forms an equal-weight book long the top decile and short the bottom decile "
+        "of that day's predictions (predicted probability for direction, predicted rank for rank), "
+        f"1 long / 1 short per unit of capital. A book is held for {HORIZON} daily returns with "
+        f"capital split across the {HORIZON} live books, weights rebalanced daily to target, and "
+        f"{COST_BPS:.0f} bps charged per unit of notional traded. A constant prediction takes no "
+        "positions. Returns are raw (no risk-free adjustment) and annualised geometrically, Sharpe "
+        "is on daily returns x sqrt(252), turnover is notional traded per year per unit of "
+        "capital, "
+        "and `HAC t` tests mean daily net return = 0 (Newey-West, lag 4). `spy` is buy-and-hold "
+        "SPY over the same days with no costs. Multi-seed models: mean +- std across seeds; `-` "
+        "marks a statistic undefined because the strategy never trades.",
+        "",
+    ]
+    hdr = ["model", *(h for _, h, _ in BT_COLS)]
+    for task in list(dict.fromkeys(B["task"])):
+        lines += [f"### {task}", "", "| " + " | ".join(hdr) + " |", "|" + "---|" * len(hdr)]
+        for model in [*cfg.models, "spy"]:
+            g = _sel(B, task=task, model=model)
+            if g.empty:
+                continue
+            cells = [f"{model} ({len(g)} seeds)" if len(g) > 1 else model]
+            for col, _, spec in BT_COLS:
+                v = g[col].dropna()
+                if v.empty:
+                    cells.append("-")
+                    continue
+                cell = f"{v.mean():{spec}}"
+                if len(v) > 1:
+                    cell += f" +- {v.std():{spec.lstrip('+')}}"
+                cells.append(cell)
+            lines.append("| " + " | ".join(cells) + " |")
+        lines += ["", f"![{task} wealth](plots/wealth_{task}.png)", ""]
+    return lines

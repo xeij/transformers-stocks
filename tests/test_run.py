@@ -56,3 +56,9 @@ def test_run_end_to_end_on_synthetic_data(tmp_path, prices):
     assert manifest["config_hash"] and manifest["data_start"] and manifest["n_folds"] >= 2
     summary = (out / "summary.md").read_text()
     assert "vol_5d" in summary and "lgbm" in summary and "lstm" in summary
+
+    bt = pd.read_parquet(out / "backtest.parquet")
+    assert set(bt["task"]) == {"dir_5d", "rank_5d"} and "spy" in set(bt["model"])
+    assert (out / "plots" / "fold_vol_5d.png").exists()
+    assert (out / "plots" / "wealth_rank_5d.png").exists()
+    assert "## Backtest" in summary

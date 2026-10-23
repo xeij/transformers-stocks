@@ -1,6 +1,6 @@
 # exp02: walk-forward results
 
-Generated 2026-10-23T17:12:33+00:00 | config `be08cae43cee` | git `3ef2290748` (dirty)
+Generated 2026-10-23T21:30:59+00:00 | config `be08cae43cee` | git `6d96c99524` (dirty)
 
 Samples 2010-04-06..2026-09-30, 190787 rows x 43 features, 46 tickers. 11 folds: train 60m / val 6m / test 12m, step 12m; test blocks 2015-07-01..2026-07-01.
 
@@ -35,6 +35,8 @@ Per-fold `rmse` (seed-averaged):
 | 10 | 2025-07-01..2026-07-01 | 0.6261 | 0.4878 | 0.4879 | 0.4982 | 0.4908 |
 | pooled | all | 0.6349 | 0.4958 | 0.5098 | 0.5267 | 0.5120 |
 
+![per fold](plots/fold_vol_5d.png)
+
 ## dir_5d (classification)
 
 | model | accuracy | balanced_accuracy | auc | DM vs naive | sig | DM vs lgbm | sig |
@@ -62,6 +64,8 @@ Per-fold `accuracy` (seed-averaged):
 | 10 | 2025-07-01..2026-07-01 | 0.5312 | 0.5258 | 0.5312 | 0.5332 | 0.5304 |
 | pooled | all | 0.5562 | 0.5526 | 0.5562 | 0.5111 | 0.5337 |
 
+![per fold](plots/fold_dir_5d.png)
+
 ## rank_5d (regression)
 
 | model | ic | rank_ic | ic_tstat | rank_ic_tstat | DM vs naive | sig | DM vs lgbm | sig |
@@ -88,3 +92,35 @@ Per-fold `rank_ic` (seed-averaged):
 | 9 | 2024-07-01..2025-07-01 | 0.0000 | 0.0441 | 0.0049 | 0.0293 | -0.0067 |
 | 10 | 2025-07-01..2026-07-01 | 0.0000 | 0.0244 | 0.0229 | 0.0049 | 0.0179 |
 | pooled | all | 0.0000 | 0.0141 | 0.0047 | 0.0189 | -0.0014 |
+
+![per fold](plots/fold_rank_5d.png)
+
+## Backtest: long/short decile book, 5-day holding, 10 bps per side
+
+Each test date forms an equal-weight book long the top decile and short the bottom decile of that day's predictions (predicted probability for direction, predicted rank for rank), 1 long / 1 short per unit of capital. A book is held for 5 daily returns with capital split across the 5 live books, weights rebalanced daily to target, and 10 bps charged per unit of notional traded. A constant prediction takes no positions. Returns are raw (no risk-free adjustment) and annualised geometrically, Sharpe is on daily returns x sqrt(252), turnover is notional traded per year per unit of capital, and `HAC t` tests mean daily net return = 0 (Newey-West, lag 4). `spy` is buy-and-hold SPY over the same days with no costs. Multi-seed models: mean +- std across seeds; `-` marks a statistic undefined because the strategy never trades.
+
+### dir_5d
+
+| model | ann. return (net) | Sharpe (net) | max DD (net) | HAC t (net) | ann. return (gross) | Sharpe (gross) | turnover / yr |
+|---|---|---|---|---|---|---|---|
+| naive | +0.0% | - | 0.0% | +0.00 | +0.0% | - | 0.0 |
+| linear | -18.2% | -0.84 | -89.4% | -2.71 | -5.8% | -0.18 | 141.4 |
+| lgbm | -3.0% | -0.14 | -40.7% | -0.59 | -2.3% | -0.09 | 6.5 |
+| lstm (3 seeds) | -8.0% +- 2.7% | -0.24 +- 0.12 | -68.3% +- 7.5% | -0.82 +- 0.41 | +2.7% +- 3.0% | +0.23 +- 0.13 | 109.9 +- 3.6 |
+| patchtst (3 seeds) | -12.0% +- 3.2% | -0.69 +- 0.32 | -81.1% +- 4.4% | -2.32 +- 1.09 | +2.0% +- 4.1% | +0.18 +- 0.25 | 147.2 +- 7.7 |
+| spy | +14.2% | +0.83 | -33.7% | +3.02 | +14.2% | +0.83 | 0.0 |
+
+![dir_5d wealth](plots/wealth_dir_5d.png)
+
+### rank_5d
+
+| model | ann. return (net) | Sharpe (net) | max DD (net) | HAC t (net) | ann. return (gross) | Sharpe (gross) | turnover / yr |
+|---|---|---|---|---|---|---|---|
+| naive | +0.0% | - | 0.0% | +0.00 | +0.0% | - | 0.0 |
+| linear | -4.2% | -0.07 | -68.5% | -0.22 | +8.5% | +0.46 | 124.8 |
+| lgbm | -10.7% | -0.50 | -77.7% | -1.72 | +1.9% | +0.19 | 131.9 |
+| lstm (3 seeds) | -0.1% +- 5.4% | +0.11 +- 0.23 | -54.5% +- 16.0% | +0.36 +- 0.77 | +10.2% +- 6.1% | +0.51 +- 0.22 | 97.8 +- 6.2 |
+| patchtst (3 seeds) | -7.1% +- 8.9% | -0.25 +- 0.45 | -69.7% +- 19.7% | -0.82 +- 1.51 | +4.5% +- 8.9% | +0.29 +- 0.39 | 117.7 +- 12.6 |
+| spy | +14.2% | +0.83 | -33.7% | +3.02 | +14.2% | +0.83 | 0.0 |
+
+![rank_5d wealth](plots/wealth_rank_5d.png)

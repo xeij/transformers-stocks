@@ -15,10 +15,11 @@ result is a success. Package name: `stockbench`.
 | `splits.py` | `walk_forward(first, last, cfg) -> list[Fold]`; `Fold.assign(dates, target_end)` -> train/val/test boolean masks with purge |
 | `models.py` | `Model` protocol `fit(X, y, X_val, y_val)` / `predict(X)`; `naive`, `linear` (ridge or logistic by task), `lgbm`; `make_model(name, task, seed)` |
 | `eval.py` | per-task metrics, `dm_test` (HAC), fold/pooled summaries |
-| `run.py` | the experiment loop; writes `reports/<exp>/{predictions,metrics,dm}.parquet`, `summary.md`, `manifest.json` |
+| `run.py` | the experiment loop; writes `reports/<exp>/{predictions,metrics,dm,backtest,backtest_daily}.parquet`, `plots/*.png`, `summary.md`, `manifest.json` |
 | `__main__.py` | `python -m stockbench run --config configs/exp01.yaml` |
 | `nets.py` (phase 2) | window dataset, LSTM, PatchTST, torch training loop with seeds |
-| `backtest.py` (phase 3) | long/short backtest from direction and rank predictions |
+| `backtest.py` (phase 3) | decile long/short books from the direction and rank predictions, overlapping 5-day holding, costs, SPY benchmark |
+| `plots.py` (phase 3) | PNG figures: per-fold metric per task, net wealth curves |
 
 `tests/` builds synthetic random-walk panels (no network) and holds the leakage tests, which were
 written before any model code.
@@ -142,6 +143,29 @@ computed from bars `<= its date`, so the window contains no information after `t
 19. macOS: the torch wheel bundles its own `libomp.dylib` and LightGBM links Homebrew's; two
     OpenMP runtimes in one process hang or segfault. `scripts/fix_macos_venv.sh` points torch at
     the Homebrew copy (and clears the hidden flag some process keeps putting on `.venv`).
+20. Backtest book: on each test date the names are mid-ranked by prediction, `(rank - 0.5) / n`;
+    the top decile (`> 0.9`) is held long and the bottom decile (`< 0.1`) short, equal weight,
+    1 long / 1 short per unit of capital (46 names give 5 per side). Ties share the average rank,
+    so a constant prediction (the naive, or LightGBM collapsed to the base rate) takes no
+    positions rather than arbitrary ones. Direction trades on the predicted probability, rank on
+    the predicted percentile; volatility has no backtest.
+21. Holding: overlapping books. The book formed at the close of t earns the daily returns of
+    t+1..t+5 and capital is split 1/5 across the five live books, so the weights held on day d
+    are the average of the books formed on the five previous dates (the calendar-time portfolio
+    of Jegadeesh and Titman). Weights are reset to target every day; drift inside a holding
+    period is ignored. Daily simple returns from adjusted closes.
+22. Costs and statistics: 10 bps per unit of notional traded, charged on `sum |W_d - W_{d-1}|`
+    (a complete change of book costs 4 units x 10 bps per 5 days). Returns are raw (no risk-free
+    rate, no short rebate) and annualised geometrically; Sharpe is mean / std of daily returns
+    x sqrt(252); turnover is annualised notional traded per unit of capital; the HAC t-stat is
+    the Newey-West (lag 4) test of mean daily net return = 0. The benchmark is SPY buy-and-hold
+    over the same days with no costs.
+23. The direction model predicts on every test row, including the dead-zone rows that carry no
+    label; metrics and DM tests use labelled rows only. Otherwise the tradable universe on a
+    date would be the names that in hindsight moved more than 0.25%.
+24. Figures: the per-fold primary metric per task, and the net wealth curve per backtest task
+    where a multi-seed model's seeds are averaged into one daily return series (an equal-weight
+    portfolio of the seed strategies).
 
 ## Phases
 
