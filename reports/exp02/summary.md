@@ -1,6 +1,6 @@
 # exp02: walk-forward results
 
-Generated 2026-10-23T21:30:59+00:00 | config `be08cae43cee` | git `6d96c99524` (dirty)
+Generated 2026-10-23T21:35:45+00:00 | config `be08cae43cee` | git `722acc1c6d`
 
 Samples 2010-04-06..2026-09-30, 190787 rows x 43 features, 46 tickers. 11 folds: train 60m / val 6m / test 12m, step 12m; test blocks 2015-07-01..2026-07-01.
 
