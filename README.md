@@ -57,7 +57,11 @@ flat. SPY buy-and-hold over the same days is the benchmark.
 All three phases are done: data cache, features, targets, splitter, leakage tests, naive /
 ridge-logistic / LightGBM baselines, metrics, DM tests, CLI; the LSTM and PatchTST sequence
 models trained on 64-bar windows pooled across tickers with three seeds each; and the long/short
-backtest with costs and the figures. `reports/exp02/summary.md` is the full report.
+backtest with costs and the figures. `reports/exp02/summary.md` is the generated summary and
+`paper/main.pdf` is the full write-up (data, methodology, leakage control, results, backtest,
+limitations). `uv run python scripts/build_paper.py` regenerates every table and figure in the
+paper from the result files and compiles it; it needs a TeX installation with `pdflatex` and
+`bibtex`.
 
 Results (11 test years, 2015-07 to 2026-07): ridge is the best volatility model (RMSE 0.495
 against 0.634 for the random-walk naive and 0.508 for LightGBM); PatchTST ties LightGBM (0.510,

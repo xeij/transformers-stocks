@@ -1,0 +1,12 @@
+\begin{tabular}{lrrrrrrr}
+\toprule
+Model & Net return & Net Sharpe & Max DD & $t$(net) & Gross return & Gross Sharpe & Turnover \\
+\midrule
+Naive & $+0.0\%$ & -- & $0.0\%$ & $+0.00$ & $+0.0\%$ & -- & $0$ \\
+Ridge / logistic & $-18.2\%$ & $-0.84$ & $-89.4\%$ & $-2.71$ & $-5.8\%$ & $-0.18$ & $141$ \\
+LightGBM & $-3.0\%$ & $-0.14$ & $-40.7\%$ & $-0.59$ & $-2.3\%$ & $-0.09$ & $6$ \\
+LSTM (3 seeds) & $-8.0\% \pm 2.7\%$ & $-0.24 \pm 0.12$ & $-68.3\% \pm 7.5\%$ & $-0.82 \pm 0.41$ & $+2.7\% \pm 3.0\%$ & $+0.23 \pm 0.13$ & $110 \pm 4$ \\
+PatchTST (3 seeds) & $-12.0\% \pm 3.2\%$ & $-0.69 \pm 0.32$ & $-81.1\% \pm 4.4\%$ & $-2.32 \pm 1.09$ & $+2.0\% \pm 4.1\%$ & $+0.18 \pm 0.25$ & $147 \pm 8$ \\
+SPY buy-and-hold & $+14.2\%$ & $+0.83$ & $-33.7\%$ & $+3.02$ & $+14.2\%$ & $+0.83$ & $0$ \\
+\bottomrule
+\end{tabular}
