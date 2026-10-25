@@ -1,40 +1,66 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[10pt,a4paper,twoside,twocolumn]{article}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{microtype}
-\usepackage[margin=2.6cm]{geometry}
+\usepackage[a4paper,twoside,left=2cm,right=2cm,top=2.4cm,bottom=2.2cm,headheight=14pt,headsep=0.6cm,columnsep=0.7cm]{geometry}
+\usepackage{fancyhdr}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{caption}
-\usepackage{float}
 \usepackage{enumitem}
 \usepackage[round,authoryear]{natbib}
 \usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Do Transformers Add Predictive Value for Short-Horizon Equity Forecasting?},
+  pdfauthor={Shaya Arya},
+  pdfsubject={A leak-free walk-forward benchmark of a PatchTST encoder against linear, gradient-boosted and recurrent baselines on daily US equities},
+  pdfkeywords={time-series forecasting, transformers, PatchTST, equity returns, realised volatility, walk-forward evaluation}}
 \input{tables/meta}
-\captionsetup{font=small,labelfont=bf,width=.92\textwidth}
+\captionsetup{font=small,labelfont=bf}
+% let wide floats fill the top of a page or a page of their own instead of queueing up
+\setcounter{dbltopnumber}{3}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\dblfloatpagefraction}{0.7}
+\renewcommand{\textfraction}{0.05}
+\extrafloats{20}
 \setlength{\parskip}{3pt}
+% never strand a single line of a paragraph at the top or bottom of a column
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+% do not stretch a short column to the page bottom (the stretch lands under headings)
+\raggedbottom
+% two-sided running heads: page number on the outer edge, title on verso, section on recto
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\sectionmark}[1]{\markboth{\thesection\ #1}{}}
+\fancyhead[LE]{\thepage}
+\fancyhead[RE]{\small\itshape Do transformers add predictive value for short-horizon equity forecasting?}
+\fancyhead[LO]{\small\itshape\nouppercase{\leftmark}}
+\fancyhead[RO]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}\fancyfoot[C]{\thepage}}
 \newcommand{\task}[1]{\texttt{#1}}
 \newcommand{\E}{\mathbb{E}}
 \DeclareMathOperator{\sign}{sign}
 \DeclareMathOperator{\rank}{rank}
-% shrink a table to the text width only when it is wider
+% shrink a table to the line width (one column, or the page in a starred float) only when wider
 \newsavebox{\tablebox}
-\newcommand{\fitwidth}[1]{\sbox{\tablebox}{#1}\ifdim\wd\tablebox>\textwidth\resizebox{\textwidth}{!}{\usebox{\tablebox}}\else\usebox{\tablebox}\fi}
+\newcommand{\fitwidth}[1]{\sbox{\tablebox}{#1}\ifdim\wd\tablebox>\linewidth\resizebox{\linewidth}{!}{\usebox{\tablebox}}\else\usebox{\tablebox}\fi}
 
-\title{Do Transformers Add Predictive Value for Short-Horizon Equity Forecasting?\\
+\title{Do Transformers Add Predictive Value for Short-Horizon Equity Forecasting?\\[8pt]
 \large A leak-free walk-forward benchmark against linear, gradient-boosted and recurrent baselines}
-\author{Shaya Arya\\
-\small Master's in Artificial Intelligence, Universitat Polit\`ecnica de Catalunya\\[4pt]
-\small Experiment \texttt{exp02}, configuration \texttt{\metaconfighash}, code revision \texttt{\metasha}}
-\date{\metagenerated}
+\author{\large Shaya Arya\\[10pt]
+\normalsize Master's in Artificial Intelligence\\[3pt]
+\normalsize Universitat Polit\`ecnica de Catalunya}
+\date{October 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-We ask whether a transformer encoder improves on strong, cheap baselines for three canonical short-horizon prediction problems on daily US equity data: the log realised volatility of the next five trading days, the sign of the next five-day return, and the cross-sectional rank of that return within a 46-name universe. A naive forecast, ridge or logistic regression, LightGBM, a two-layer LSTM and a channel-independent PatchTST encoder are trained on identical features and evaluated on an identical rolling walk-forward design with 60-month training, 6-month validation and 12-month test blocks, a horizon purge at every block boundary, and scalers fitted on training rows only. Eleven out-of-sample years (2015-07 to 2026-07, \metanrows{} samples) are scored with task-appropriate metrics, Diebold--Mariano tests against both the naive forecast and LightGBM using a Newey--West variance, three seeds per neural model, and a costed long/short backtest. On volatility every model beats the random walk by a wide margin, ridge regression is the best model (RMSE 0.495 against 0.634 naive and 0.508 LightGBM), and PatchTST is statistically indistinguishable from LightGBM (0.510; DM $+0.7$). Direction and rank are null results for every model: no model beats the base rate on direction, and the only ranking signal with a $t$-statistic above two (LSTM, rank IC 0.019) is too small to trade. Net of 10 basis points per side, every long/short decile book loses money while buy-and-hold SPY compounds at 14\% a year; annual turnover of 100 to 150 units of capital costs 10 to 15 percentage points of return and nothing in the model set has a gross edge large enough to pay for it. The transformer therefore adds no predictive value in this setting, and the harness that establishes this, with its leakage tests and resumable fit cache, is released with the paper.
+We ask whether a transformer encoder improves on strong, cheap baselines for three canonical short-horizon prediction problems on daily US equity data: the log realised volatility of the next five trading days, the sign of the next five-day return, and the cross-sectional rank of that return within a 46-name universe. A naive forecast, ridge or logistic regression, LightGBM, a two-layer LSTM and a channel-independent PatchTST encoder are trained on identical features and evaluated on an identical rolling walk-forward design with 60-month training, 6-month validation and 12-month test blocks, a horizon purge at every block boundary, and scalers fitted on training rows only. Eleven out-of-sample years (2015-07 to 2026-07; 127{,}190 test samples from a panel of \metanrows{}) are scored with task-appropriate metrics, Diebold--Mariano tests against both the naive forecast and LightGBM using a Newey--West variance, three seeds per neural model, and a costed long/short backtest. On volatility every model beats the random walk by a wide margin, ridge regression is the best model (RMSE 0.495 against 0.634 naive and 0.508 LightGBM), and PatchTST is statistically indistinguishable from LightGBM (0.510; DM $+0.7$). Direction and rank are null results for every model: no model beats the base rate on direction, and the only ranking signal with a $t$-statistic above two (LSTM, rank IC 0.019) is too small to trade. Net of 10 basis points per side, no long/short decile book makes money: the best ends flat and every other loses, while buy-and-hold SPY compounds at 14\% a year; annual turnover of 100 to 150 units of capital costs 10 to 15 percentage points of return and nothing in the model set has a gross edge large enough to pay for it. The transformer therefore adds no predictive value in this setting, and the harness that establishes this, with its leakage tests and resumable fit cache, is released with the paper.
 \end{abstract}
 
 \section{Introduction}
@@ -53,7 +79,7 @@ The remainder of the paper is organised as follows. Section~\ref{sec:related} pl
 
 \paragraph{Transformers for time series.} PatchTST \citep{nie2023patchtst} segments each univariate series into overlapping patches, embeds each patch as a token, processes the channels independently with a shared encoder and reads the forecast from a flattened representation; it set the state of the art on the standard long-horizon benchmarks at the time of publication. \citet{zeng2023transformers} showed that a one-layer linear model matches or beats several earlier transformer designs on the same benchmarks, which motivated the patching and channel-independence of PatchTST and also motivates our inclusion of a linear baseline on exactly the same information. The Temporal Fusion Transformer \citep{lim2021tft} adds variable selection and static covariates; it is out of scope here but the harness admits it.
 
-\paragraph{Volatility forecasting.} Realised volatility is strongly persistent and well described by simple autoregressive structure \citep{andersen2003modeling,corsi2009simple}, and \citet{hansen2005forecast} found that few models beat a GARCH(1,1) out of sample. Comparing volatility forecasts requires a loss that is robust to the noise in the realised proxy; \citet{patton2011volatility} shows that squared error and QLIKE are the two members of the robust family, and we report both.
+\paragraph{Volatility forecasting.} Realised volatility is strongly persistent and well described by simple autoregressive structure \citep{andersen2003modeling,corsi2009simple}, and \citet{hansen2005forecast} found that few models beat a GARCH(1,1) out of sample. Comparing volatility forecasts requires a loss that is robust to the noise in the realised proxy; \citet{patton2011volatility} shows that squared error and QLIKE both belong to the robust family, and we report both.
 
 \paragraph{Evaluation and overfitting.} The Diebold--Mariano test \citep{diebold1995comparing} with a heteroskedasticity- and autocorrelation-consistent variance \citep{newey1987simple} is the standard tool for comparing forecast accuracy on dependent series. \citet{bergmeir2012use} and \citet{lopezdeprado2018advances} discuss why ordinary cross-validation misstates the accuracy of time-series learners and why a purge between training and test observations is necessary when targets span several periods. \citet{bailey2014pseudo} and \citet{harvey2016cross} quantify the extent to which model selection on a backtest inflates reported performance; we respond by fixing the model set and the hyperparameter grids before any test fold is scored and by reporting every configuration that was run. \citet{novymarx2016taxonomy} document that transaction costs eliminate most of the apparent profits of high-turnover anomalies, which is the central finding of our backtest as well.
 
@@ -73,12 +99,12 @@ The universe was chosen in 2026 from names that are large and liquid today and h
 
 Table~\ref{tab:folds} lists the eleven folds. All blocks are half-open calendar intervals. Fold $k$ trains on $[2010\text{-}01\text{-}01 + k\,\text{y},\ 2015\text{-}01\text{-}01 + k\,\text{y})$, validates on the following six months and tests on the following twelve; a fold is kept only if its test block is completely observed. Sample counts differ slightly across folds because of the purge described in Section~\ref{sec:walkforward} and because the direction target discards samples inside its dead zone (last column).
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\small
 \caption{Walk-forward folds. $n$ counts ticker-day samples after purging; $n_{\text{test}}^{\text{dir}}$ is the number of test samples that carry a direction label.}
 \label{tab:folds}
 \input{tables/folds}
-\end{table}
+\end{table*}
 
 \section{Methodology}\label{sec:method}
 
@@ -87,16 +113,16 @@ Table~\ref{tab:folds} lists the eleven folds. All blocks are half-open calendar 
 Let $P_{i,t}$ be the adjusted close of name $i$ on trading day $t$, $p_{i,t}=\log P_{i,t}$, and $r_{i,t}=p_{i,t}-p_{i,t-1}$ the one-day log return. With horizon $H=5$ trading days, the forward return is $f_{i,t}=p_{i,t+H}-p_{i,t}$ and the three targets are
 \begin{align}
 y^{\text{vol}}_{i,t} &= \log\sqrt{\tfrac{1}{H}\textstyle\sum_{j=1}^{H} r_{i,t+j}^{2}}, \label{eq:vol}\\
-y^{\text{dir}}_{i,t} &= \mathbf{1}\{f_{i,t}>0\}\quad\text{defined only when } |f_{i,t}|\ge\delta,\ \delta=0.25\%, \label{eq:dir}\\
+y^{\text{dir}}_{i,t} &= \mathbf{1}\{f_{i,t}>0\}\quad\text{for } |f_{i,t}|\ge\delta=0.25\%, \label{eq:dir}\\
 y^{\text{rank}}_{i,t} &= \frac{\rank_{i'\in\mathcal{U}_t}\!\big(f_{i',t}\big)(i)}{|\mathcal{U}_t|}\in(0,1], \label{eq:rank}
 \end{align}
-where $\mathcal{U}_t$ is the set of names with a forward return on day $t$. The volatility target is the log of the realised standard deviation of daily returns over the next five bars, so that squared error on it is a relative error on volatility. The direction target drops the 8 to 11 per cent of samples whose five-day move is inside $\pm 0.25\%$, which removes the observations whose sign is indistinguishable from noise. The rank target is a cross-sectional percentile, so it is invariant to the market return on the day and asks only for relative ordering.
+where $\mathcal{U}_t$ is the set of names with a forward return on day $t$ and the direction target is undefined inside the dead zone $|f_{i,t}|<\delta$. The volatility target is the log of the realised standard deviation of daily returns over the next five bars, so that squared error on it is a relative error on volatility. The direction target drops the 6 to 11 per cent of samples per fold (7 per cent overall) whose five-day move is inside $\pm 0.25\%$, which removes the observations whose sign is indistinguishable from noise. The rank target is a cross-sectional percentile, so it is invariant to the market return on the day and asks only for relative ordering.
 
 Every target depends on bars $t+1,\dots,t+H$. We record for every sample the date of bar $t+H$ as its \emph{target end}, and because the rank target couples all names on a date, we define the target end of a date as the latest target end among its names. This quantity drives the purge.
 
 \subsection{Features}\label{sec:features}
 
-Every model sees the same \metanfeatures{} features, computed per name from data at or before $t$ and registered in a single table so that a new feature is one function. Per name: cumulative log returns $p_{t}-p_{t-k}$ for $k\in\{1,2,3,5,10,21\}$; realised volatility $\log\sqrt{\tfrac{1}{w}\sum_{j=0}^{w-1}r_{t-j}^2}$ for $w\in\{5,21,63\}$, so that the five-bar version is the lagged analogue of the target in \eqref{eq:vol}; a volume $z$-score, the log volume against its trailing 21-bar mean and standard deviation; the 14-day relative strength index with Wilder's exponential smoothing \citep{wilder1978new}; the MACD, the difference between 12- and 26-day exponential moving averages divided by the close, and its 9-day signal-line histogram; and the maximum drawdown over the trailing 21 bars. Cross-asset: SPY log returns at 1, 5 and 21 bars and its 21-bar realised volatility; the log VIX level and its 1- and 5-bar changes; 1- and 5-bar changes in the dollar index and the ten-year yield. Calendar: five day-of-week and twelve month-of-year indicators. Rows with any undefined feature (the warm-up at the start of each series) are dropped once for all tasks; rows with an undefined target are dropped per task.
+Every model sees the same \metanfeatures{} features, computed per name from data at or before $t$ and registered in a single table so that a new feature is one function. Per name: cumulative log returns $p_{t}-p_{t-k}$ for $k\in\{1,2,3,5,10,21\}$; realised volatility $\log\sqrt{\tfrac{1}{w}\sum_{j=0}^{w-1}r_{t-j}^2}$ for $w\in\{5,21,63\}$, so that the five-bar version is the lagged analogue of the target in \eqref{eq:vol}; a volume $z$-score, the log volume against its trailing 21-bar mean and standard deviation; the 14-day relative strength index with Wilder's exponential smoothing \citep{wilder1978new}; the MACD, the difference between 12- and 26-day exponential moving averages divided by the close, and its 9-day signal-line histogram; and the maximum drawdown over the trailing 21 bars. Cross-asset: SPY log returns at 1, 5 and 21 bars and its 21-bar realised volatility; the log VIX level and its 1- and 5-bar changes; the ten-year yield level and its 1- and 5-bar changes; and 1- and 5-bar log changes in the dollar index. Calendar: five day-of-week and twelve month-of-year indicators. Rows with any undefined feature (the warm-up at the start of each series) are dropped once for all tasks; rows with an undefined target are dropped per task.
 
 \subsection{Walk-forward design and leakage control}\label{sec:walkforward}
 
@@ -116,19 +142,19 @@ All models receive the same training, validation and test rows of a fold. The gr
 
 \paragraph{Ridge and logistic regression.} A \texttt{StandardScaler} fitted on training rows followed by ridge regression (volatility and rank) or $\ell_2$-penalised logistic regression (direction). The penalty is parameterised on the per-sample scale, $\alpha=\lambda n$ for ridge and $C=1/(\lambda n)$ for logistic regression with $n$ the number of training rows, and $\lambda$ is chosen from $\{10^{-4},10^{-3},10^{-2},10^{-1},1\}$ by squared error (Brier score for direction) on the validation block.
 
-\paragraph{LightGBM.} Gradient-boosted trees \citep{ke2017lightgbm} with up to 2{,}000 rounds at learning rate 0.02, 31 leaves, a minimum of 100 samples per leaf, row and column subsampling of 0.8, $\ell_2$ regularisation of 1.0, deterministic row-wise histograms, and early stopping on the validation loss with a patience of 100 rounds. The best iteration is recorded; when it is one, the model has reduced to a constant close to the training mean.
+\paragraph{LightGBM.} Gradient-boosted trees \citep{ke2017lightgbm} with up to 2{,}000 rounds at learning rate 0.02, 31 leaves, a minimum of 100 samples per leaf, row and column subsampling of 0.8, $\ell_2$ regularisation of 1.0, deterministic row-wise histograms, and early stopping on the validation loss with a patience of 100 rounds. The best iteration is recorded; when it is one, the model is a single tree of at most 31 leaves whose predictions stay close to the training mean.
 
 \paragraph{LSTM.} Two stacked LSTM layers of 64 units with dropout 0.2 between the layers and before a linear head that reads the final hidden state \citep{hochreiter1997lstm}.
 
-\paragraph{PatchTST.} A channel-independent encoder in the design of \citet{nie2023patchtst}. Each of the \metanfeatures{} feature channels of a 64-bar window is cut into 15 patches of length 8 with stride 4, each patch is linearly embedded into $d_{\text{model}}=64$ dimensions and given a learned positional embedding, and the sequence of patches is processed by two pre-norm transformer encoder layers with four heads, a feed-forward width of 128, GELU activations and dropout 0.3, followed by a final layer normalisation. Encoder weights are shared across channels. A shared flatten head maps the $15\times 64$ encoded patches of a channel to one scalar, and a linear channel mixer maps the \metanfeatures{} channel scalars to the prediction. We omit the reversible instance normalisation of the original design because the level of the inputs, for instance the current realised volatility, is signal in this problem rather than nuisance. The model has about 60{,}000 parameters.
+\paragraph{PatchTST.} A channel-independent encoder in the design of \citet{nie2023patchtst}. Each of the \metanfeatures{} feature channels of a 64-bar window is cut into 15 patches of length 8 with stride 4, each patch is linearly embedded into $d_{\text{model}}=64$ dimensions and given a learned positional embedding, and the sequence of patches is processed by two pre-norm transformer encoder layers with four heads, a feed-forward width of 128, GELU activations and dropout 0.3, followed by a final layer normalisation. Encoder weights are shared across channels. A shared flatten head maps the $15\times 64$ encoded patches of a channel to one scalar, and a linear channel mixer maps the \metanfeatures{} channel scalars to the prediction. We omit the reversible instance normalisation of the original design because the level of the inputs, for instance the current realised volatility, is signal in this problem rather than nuisance. The model has about 70{,}000 parameters (69{,}613; the LSTM has 61{,}249).
 
-\paragraph{Neural training.} Inputs are standardised with training-row statistics and clipped to $\pm 5$; regression targets are standardised with training-row statistics and classification uses the logit with a binary cross-entropy loss. Adam \citep{kingma2015adam} with learning rate $10^{-3}$, batches of 512 windows, gradient-norm clipping at 1.0, at most 20 epochs, and early stopping on the validation loss with a patience of 3 epochs and restoration of the best epoch's weights. Each fit is run for seeds $\{0,1,2\}$, which fix initialisation, batch order and dropout masks. Training runs on an Apple M5 GPU through the Metal backend; repeated fits on this device reproduced predictions bit for bit, although the framework does not guarantee it.
+\paragraph{Neural training.} Inputs are standardised with training-row statistics and clipped to $\pm 5$; regression targets are standardised with training-row statistics and classification uses the logit with a binary cross-entropy loss. Adam \citep{kingma2015adam} with learning rate $10^{-3}$, batches of 512 windows, gradient-norm clipping at 1.0, at most 20 epochs, and early stopping on the validation loss with a patience of 3 epochs and restoration of the best epoch's weights. Each fit is run for seeds $\{0,1,2\}$, which fix initialisation, batch order and dropout masks. Training runs on an Apple M5 GPU through the Metal backend.
 
 \subsection{Metrics}
 
 For volatility we report the root mean squared error and mean absolute error on the log-volatility scale and the QLIKE loss of \citet{patton2011volatility},
 \begin{equation}
-\text{QLIKE}=\frac{1}{n}\sum\Big(\frac{\sigma^2}{\hat\sigma^2}-\log\frac{\sigma^2}{\hat\sigma^2}-1\Big),\qquad \frac{\sigma^2}{\hat\sigma^2}=\exp\!\big(2(y-\hat y)\big).
+\text{QLIKE}=\frac{1}{n}\sum\Big(\frac{\sigma^2}{\hat\sigma^2}-\log\frac{\sigma^2}{\hat\sigma^2}-1\Big),\quad \frac{\sigma^2}{\hat\sigma^2}=e^{2(y-\hat y)}.
 \end{equation}
 For direction we report accuracy, balanced accuracy and the area under the ROC curve, with the decision threshold at a predicted probability of $0.5$. For rank we report the information coefficient, the mean over test dates of the cross-sectional Pearson correlation between prediction and target, and the rank IC, its Spearman analogue, together with the $t$-statistic of the mean daily IC computed with a Newey--West variance at lag $H-1=4$. A constant prediction has an IC of exactly zero by convention.
 
@@ -140,16 +166,16 @@ For models $A$ and $B$ with per-sample losses $\ell^A_{i,t}$ and $\ell^B_{i,t}$ 
 \begin{equation}
 d_t=\frac{1}{|\mathcal{U}_t|}\sum_{i\in\mathcal{U}_t}\big(\ell^A_{i,t}-\ell^B_{i,t}\big)
 \end{equation}
-and the statistic $\text{DM}=\bar d/\sqrt{\hat V/T}$, where $\hat V$ is the Newey--West \citep{newey1987simple} long-run variance of $d_t$ with a Bartlett kernel truncated at lag $4$, the maximal overlap of two five-day targets \citep{diebold1995comparing}. Averaging across names before computing the variance removes the strong cross-sectional correlation of losses on a given day, which would otherwise understate the variance by a factor close to the number of names. A negative statistic means that $A$ has lower loss than $B$. We report the statistic for every model against the naive forecast and against LightGBM, pooled over all test dates and separately per fold; for the neural models we report the mean, minimum and maximum over seeds and the number of seeds significant at the 5\% level, and we count the (seed, fold) pairs significant at 5\% with the same sign as the pooled statistic. Direction tests use only the samples that carry a label. We apply no multiple-comparison correction; as every significant result in Section~\ref{sec:results} is in the direction of a baseline beating a more complex model, a correction would only strengthen the conclusions.
+and the statistic $\text{DM}=\bar d/\sqrt{\hat V/T}$, where $\hat V$ is the Newey--West \citep{newey1987simple} long-run variance of $d_t$ with a Bartlett kernel truncated at lag $4$, the maximal overlap of two five-day targets \citep{diebold1995comparing}. Averaging across names before computing the variance removes the strong cross-sectional correlation of losses on a given day, which would otherwise understate the variance by a factor close to the number of names. A negative statistic means that $A$ has lower loss than $B$. We report the statistic for every model against the naive forecast and against LightGBM, pooled over all test dates and separately per fold; for the neural models we report the mean, minimum and maximum over seeds, we count the (seed, fold) pairs significant at 5\% with the same sign as the pooled statistic, and the text quotes how many seeds are individually significant where that matters. Direction tests use only the samples that carry a label. We apply no multiple-comparison correction. Apart from the gains of every model over the random-walk volatility forecast, which are far too large for any correction to matter, every significant result in Section~\ref{sec:results} is in the direction of a simpler model beating a more complex one, so a correction would only strengthen the conclusions.
 
 \subsection{Backtest}\label{sec:backtest}
 
 The direction and rank predictions are traded with a simple long/short rule. On each test date $t$ the names are mid-ranked by their prediction, $\tilde\rho_{i,t}=(\rank(\hat y_{i,t})-\tfrac12)/|\mathcal{U}_t|$, and the book $w_{t}$ is equal-weight long the names with $\tilde\rho>0.9$ and equal-weight short the names with $\tilde\rho<0.1$, one dollar long and one dollar short per dollar of capital (five names per side in a 46-name universe). Ties share the average rank, so a constant prediction takes no positions rather than arbitrary ones. A book formed at the close of $t$ earns the daily simple returns $R_{i,t+1},\dots,R_{i,t+H}$. With one book formed every day, capital is split equally across the $H$ live books, so the weights held through day $d$ are the calendar-time average of \citet{jegadeesh1993returns},
-\begin{equation}
-W_{d}=\frac{1}{H}\sum_{j=1}^{H} w_{d-j},\qquad
-r^{\text{gross}}_{d}=\sum_i W_{d,i}R_{i,d},\qquad
-r^{\text{net}}_{d}=r^{\text{gross}}_{d}-c\sum_i\big|W_{d,i}-W_{d-1,i}\big|,
-\end{equation}
+\begin{align}
+W_{d}&=\frac{1}{H}\sum_{j=1}^{H} w_{d-j},\qquad
+r^{\text{gross}}_{d}=\sum_i W_{d,i}R_{i,d},\\
+r^{\text{net}}_{d}&=r^{\text{gross}}_{d}-c\sum_i\big|W_{d,i}-W_{d-1,i}\big|,
+\end{align}
 with $c=10$ basis points per unit of notional traded. Weights are reset to target every day; drift inside a holding period is ignored. We report the geometric annualised return, the Sharpe ratio as $\sqrt{252}$ times the ratio of the mean to the standard deviation of daily returns with no risk-free adjustment \citep{lo2002statistics}, the maximum drawdown of the wealth path, the Newey--West $t$-statistic of the mean daily net return, and the annual turnover $\tfrac{252}{D}\sum_d\sum_i|W_{d,i}-W_{d-1,i}|$ in units of capital, for both gross and net returns. Buy-and-hold SPY over the same $2{,}769$ days with no costs is the benchmark. The neural models' seeds are backtested separately and summarised as mean and standard deviation.
 
 Because the direction model drops samples inside the dead zone, the universe on which it is scored is a subset chosen with knowledge of the realised return. For the backtest the direction model therefore predicts on every test sample, labelled or not, and the dead zone is applied only when computing accuracy, AUC and the Diebold--Mariano statistics; otherwise the tradable universe on a date would consist of the names that, in hindsight, moved by more than 0.25\%.
@@ -158,112 +184,112 @@ Because the direction model drops samples inside the dead zone, the universe on 
 
 \subsection{Volatility}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\scriptsize
 \caption{Five-day log realised volatility. Mean $\pm$ standard deviation across the eleven test folds, seed-averaged per fold; ``Seed sd'' is the standard deviation across seeds of the all-fold mean RMSE. DM statistics are pooled over all test dates (negative: the row's model has lower loss than the baseline); for multi-seed models the mean and [min, max] over seeds. ``sig.'' counts (seed, fold) pairs significant at 5\% with the sign of the pooled statistic. $^{*}$, $^{**}$, $^{***}$: $p<0.10$, $0.05$, $0.01$.}
 \label{tab:vol}
 \fitwidth{\input{tables/metrics_vol}}
-\end{table}
+\end{table*}
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fold_vol.pdf}
+\includegraphics[width=.85\linewidth]{figures/fold_vol.pdf}
 \caption{RMSE of the log realised volatility forecast by test fold, seed-averaged. The fold starting 2019-07 contains the March 2020 crash.}
 \label{fig:fold_vol}
-\end{figure}
+\end{figure*}
 
-Table~\ref{tab:vol} and Figure~\ref{fig:fold_vol} summarise the one target on which any model has skill. Every model beats the random walk in every fold, by a margin that the Diebold--Mariano test places far outside sampling variation (DM between $-17$ and $-32$ against naive; 30 to 33 of 33 seed-fold pairs significant for the neural models and 10 or 11 of 11 folds for the others). This is not surprising: five-day realised volatility is a noisy proxy, and any model that shrinks the last five-day estimate towards a longer-window level, as the 21- and 63-bar features allow, reduces its variance \citep{andersen2003modeling}. The ordering among the models is the informative part. Ridge regression on the \metanfeatures{} features has the lowest RMSE ($0.495$), MAE and QLIKE, and is significantly better than LightGBM in the pooled test (DM $-3.7$, $p<0.01$) although only in four of eleven folds individually. PatchTST is the second-best model by RMSE ($0.510$) and MAE and is statistically indistinguishable from LightGBM ($0.508$): the pooled DM statistic against LightGBM is $+0.7$ on average, ranges from $-0.65$ to $+2.05$ across seeds, and only one seed and four of 33 seed-fold pairs are significant. The LSTM ($0.525$) is significantly worse than LightGBM (DM $+5.0$ for every seed). Seed uncertainty is an order of magnitude smaller than fold uncertainty for both neural models (seed sd $0.004$ to $0.005$ against fold sd $0.046$ to $0.051$), so the ranking is not an artefact of initialisation.
+Table~\ref{tab:vol} and Figure~\ref{fig:fold_vol} summarise the one target on which any model has skill. Every model beats the random walk in every fold but one (PatchTST loses to it in the fold that contains the March 2020 crash, discussed below), by a margin that the Diebold--Mariano test places far outside sampling variation (pooled DM between $-17$ and $-32$ against naive; 30 of 33 seed-fold pairs significant for each neural model and 10 or 11 of 11 folds for the others). This is not surprising: five-day realised volatility is a noisy proxy, and any model that shrinks the last five-day estimate towards a longer-window level, as the 21- and 63-bar features allow, reduces its variance \citep{andersen2003modeling}. The ordering among the models is the informative part. Ridge regression on the \metanfeatures{} features has the lowest RMSE ($0.495$), MAE and QLIKE, and is significantly better than LightGBM in the pooled test (DM $-3.7$, $p<0.01$) although only in four of eleven folds individually. PatchTST is third by RMSE ($0.510$) and MAE ($0.395$), within $0.002$ of LightGBM ($0.508$ and $0.393$) and statistically indistinguishable from it: the pooled DM statistic against LightGBM is $+0.7$ on average, ranges from $-0.65$ to $+2.05$ across seeds, and only one seed and four of 33 seed-fold pairs are significant. The LSTM ($0.525$) is significantly worse than LightGBM (DM $+5.0$ on average, between $+4.0$ and $+6.5$ across seeds, every seed significant). Seed uncertainty is an order of magnitude smaller than fold uncertainty for both neural models (seed sd $0.004$ to $0.005$ against fold sd $0.046$ to $0.051$), so the ranking is not an artefact of initialisation.
 
 Figure~\ref{fig:fold_vol} shows that the non-naive models move together across folds and that their worst year by far is the fold starting in July 2019, which contains the March 2020 crash: ridge degrades from about $0.49$ to $0.54$, LightGBM and the LSTM to $0.60$ to $0.61$, and PatchTST to $0.64$, worse than the random walk ($0.62$) in that fold. The regime break penalises the higher-capacity models more because their forecasts depend on a broader set of features whose relation to future volatility shifted. PatchTST beats ridge in three of the eleven folds (those starting 2015, 2022 and 2023) and loses in the other eight. On the robust QLIKE loss, which penalises under-prediction of variance more heavily, the gaps widen in the same order: ridge $0.735$, LightGBM $0.774$, PatchTST $0.854$, LSTM $0.878$, naive $1.443$.
 
 \subsection{Direction}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\scriptsize
 \caption{Sign of the five-day return with a $\pm0.25\%$ dead zone. Layout as Table~\ref{tab:vol}; the naive model predicts the training-set frequency of the positive class and the DM loss is the Brier score.}
 \label{tab:dir}
 \fitwidth{\input{tables/metrics_dir}}
-\end{table}
+\end{table*}
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fold_dir.pdf}
-\caption{Accuracy of the direction forecast by test fold, seed-averaged. Naive and LightGBM overlap because LightGBM reduces to the base rate in most folds.}
+\includegraphics[width=.85\linewidth]{figures/fold_dir.pdf}
+\caption{Accuracy of the direction forecast by test fold, seed-averaged. Naive and LightGBM overlap because LightGBM never predicts a probability below one half, so its accuracy equals the base rate in every fold.}
 \label{fig:fold_dir}
-\end{figure}
+\end{figure*}
 
-Direction is a null result for every model (Table~\ref{tab:dir}, Figure~\ref{fig:fold_dir}). The naive model achieves $55.6\%$ accuracy because the labelled panel has an upward drift, and no model improves on it. Logistic regression reaches an AUC of $0.509$ and accuracy of $55.3\%$, LightGBM stops at its first boosting round in seven of eleven folds and therefore reproduces the base rate exactly; in the other four it stops within sixteen rounds and never assigns a probability below one half, so its accuracy equals the naive's in every fold. The pooled DM statistics of both against naive are positive and insignificant ($p=0.14$). The two neural models are significantly \emph{worse} than naive on Brier loss (LSTM DM $+9.6$, PatchTST $+5.7$, every seed significant) because they commit to both classes without having signal: the LSTM's accuracy is $51.1\%$ and PatchTST's $53.4\%$, both below the base rate, and PatchTST's AUC of $0.488$ is below one half. The training logs make the mechanism explicit. Early stopping selected the first epoch in 24 of the 33 PatchTST direction fits at a validation loss of about $0.69$ nats, which is the entropy of the base rate; the encoder found nothing to learn beyond the class frequency and its subsequent epochs only added variance.
+Direction is a null result for every model (Table~\ref{tab:dir}, Figure~\ref{fig:fold_dir}). The naive model achieves $55.6\%$ accuracy because the labelled panel has an upward drift, and no model improves on it. Logistic regression reaches an AUC of $0.509$ and accuracy of $55.3\%$. LightGBM stops at its first boosting round in seven of eleven folds and within sixteen rounds in the other four; its single trees split mostly on market-wide features, so on 82 per cent of test dates every name receives the same probability, and it never assigns a probability below one half, so its accuracy equals the naive's in every fold. The pooled DM statistics of both against naive are positive and insignificant ($p=0.14$ and $0.16$). The two neural models are significantly \emph{worse} than naive on Brier loss (LSTM DM $+9.6$, PatchTST $+5.7$, every seed significant) because they commit to both classes without having signal: the LSTM's accuracy is $51.1\%$ and PatchTST's $53.4\%$, both below the base rate, and PatchTST's AUC of $0.488$ is below one half.
 
 \subsection{Cross-sectional rank}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\scriptsize
 \caption{Cross-sectional percentile rank of the five-day return. IC and rank IC are means over test dates of the daily cross-sectional Pearson and Spearman correlations; $t$-statistics use a Newey--West variance at lag 4 and are pooled over all test dates and averaged over seeds. DM losses are squared errors on the rank target.}
 \label{tab:rank}
 \fitwidth{\input{tables/metrics_rank}}
-\end{table}
+\end{table*}
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fold_rank.pdf}
+\includegraphics[width=.85\linewidth]{figures/fold_rank.pdf}
 \caption{Rank IC by test fold, seed-averaged. The naive model predicts a constant and has an IC of exactly zero.}
 \label{fig:fold_rank}
-\end{figure}
+\end{figure*}
 
-No model produces a usable ranking signal (Table~\ref{tab:rank}, Figure~\ref{fig:fold_rank}). The LSTM has the highest IC and rank IC, $0.019$ and $0.019$, with pooled $t$-statistics of $2.2$ and $2.1$; ridge follows at $0.012$ and $0.014$ with $t$ of $1.4$ and $1.6$; LightGBM and PatchTST are indistinguishable from zero. For reference, a daily rank IC of $0.02$ on 46 names corresponds to an $R^2$ of $0.04\%$ for the cross-section and is well below the level at which decile portfolios overcome the costs of five-day rebalancing (Section~\ref{sec:bt_results}). The squared-error comparison is harsher still. Every model's mean squared error on the rank target is \emph{higher} than that of the constant predictor, significantly so for LightGBM (DM $+2.1$), PatchTST ($+2.5$, two of three seeds) and the LSTM ($+4.9$, all seeds): the models capture a trace of ordering but pay for it with calibration. PatchTST is also unstable across seeds on this target, with a seed standard deviation of its IC ($0.014$) three to four times that of the LSTM ($0.003$) and of the same order as its mean, which is itself a symptom of fitting noise. Figure~\ref{fig:fold_rank} shows every model's IC swinging between about $-0.05$ and $+0.09$ from year to year with no consistent sign and no model consistently above the others.
+No model produces a usable ranking signal (Table~\ref{tab:rank}, Figure~\ref{fig:fold_rank}). The LSTM has the highest IC and rank IC, $0.020$ and $0.019$, with pooled $t$-statistics of $2.2$ and $2.1$; ridge follows at $0.012$ and $0.014$ with $t$ of $1.4$ and $1.6$; LightGBM and PatchTST are indistinguishable from zero. For reference, a daily rank IC of $0.02$ on 46 names corresponds to an $R^2$ of $0.04\%$ for the cross-section and is well below the level at which decile portfolios overcome the costs of five-day rebalancing (Section~\ref{sec:bt_results}). The squared-error comparison is harsher still. Every model's mean squared error on the rank target is \emph{higher} than that of the constant predictor, significantly so for LightGBM (DM $+2.1$), PatchTST ($+2.5$, two of three seeds) and the LSTM ($+4.9$, all seeds): the models capture a trace of ordering but pay for it with calibration. PatchTST is also unstable across seeds on this target, with a seed standard deviation of its rank IC ($0.013$) between two and three times that of the LSTM ($0.005$) and an order of magnitude larger than its own mean, which is itself a symptom of fitting noise. Figure~\ref{fig:fold_rank} shows every model's IC swinging between about $-0.05$ and $+0.09$ from year to year with no consistent sign and no model consistently above the others.
 
 \subsection{Backtest}\label{sec:bt_results}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\footnotesize
 \caption{Long/short decile books formed from the direction predictions, five-day holding, 10 basis points per unit traded. Returns are geometric annualised; Sharpe ratios are on daily returns with no risk-free adjustment; $t$(net) is the Newey--West $t$-statistic of the mean daily net return; turnover is notional traded per year per unit of capital. Multi-seed models: mean $\pm$ standard deviation across seeds. ``--'': undefined because the strategy never trades.}
 \label{tab:bt_dir}
 \fitwidth{\input{tables/backtest_dir}}
-\end{table}
+\end{table*}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\footnotesize
 \caption{Long/short decile books formed from the rank predictions. Layout as Table~\ref{tab:bt_dir}.}
 \label{tab:bt_rank}
 \fitwidth{\input{tables/backtest_rank}}
-\end{table}
+\end{table*}
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/wealth_dir.pdf}
+\includegraphics[width=.85\linewidth]{figures/wealth_dir.pdf}
 \caption{Net wealth of the direction-based books on a log scale, seeds averaged into one daily return series per model, against buy-and-hold SPY (dashed).}
 \label{fig:wealth_dir}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/wealth_rank.pdf}
+\includegraphics[width=.85\linewidth]{figures/wealth_rank.pdf}
 \caption{Net wealth of the rank-based books on a log scale, as Figure~\ref{fig:wealth_dir}.}
 \label{fig:wealth_rank}
-\end{figure}
+\end{figure*}
 
-Tables~\ref{tab:bt_dir} and \ref{tab:bt_rank} and Figures~\ref{fig:wealth_dir} and \ref{fig:wealth_rank} report the backtest. No strategy makes money net of costs. The best net result is the LSTM traded on its rank predictions, which ends the eleven years roughly flat ($-0.1\%\pm5.4\%$ a year across seeds, Sharpe $+0.11\pm0.23$, $t=+0.4$); every other book loses between 3 and 18 per cent a year, and the two that are statistically distinguishable from zero (logistic regression and PatchTST on direction, $t=-2.7$ and $-2.3$) lose. Buy-and-hold SPY over the same days returns $14.2\%$ a year with a Sharpe ratio of $0.83$ and $t=3.0$.
+Tables~\ref{tab:bt_dir} and \ref{tab:bt_rank} and Figures~\ref{fig:wealth_dir} and \ref{fig:wealth_rank} report the backtest. No strategy makes money net of costs. The best net result is the LSTM traded on its rank predictions, which ends the eleven years roughly flat ($-0.1\%\pm5.4\%$ a year across seeds, Sharpe $+0.11\pm0.23$, $t=+0.4$); every other book loses between 3 and 18 per cent a year, and the only books whose mean daily net return is statistically distinguishable from zero (logistic regression on direction, $t=-2.7$, and the worst PatchTST seed on each task, $t=-3.6$ and $-2.2$) lose. Buy-and-hold SPY over the same days returns $14.2\%$ a year with a Sharpe ratio of $0.83$ and $t=3.0$.
 
-Turnover explains the result. A book that is rebuilt every five days from a prediction with almost no persistence turns over between 98 and 147 units of capital a year, so at 10 basis points per unit traded the cost drag is between 10 and 15 percentage points of annual return. The break-even cost at which a strategy's net return would be zero is, to first order, its gross annual return divided by its annual turnover: about 10 basis points for the LSTM on rank ($10.2\%/98$), 7 for ridge on rank, 4 for PatchTST on rank, and 1 to 3 for every direction-based book. Only the LSTM's rank book is priced at roughly its break-even, which is why it ends flat; the others are below it. The gross Sharpe ratios tell the same story from the other side: the highest, $0.51\pm0.22$ for the LSTM on rank, is below SPY's $0.83$, and PatchTST's gross Sharpe on rank ($0.29\pm0.39$) has a seed range that spans zero. LightGBM's direction book trades 6.5 units of capital a year because its predictions are constant in most folds; the few folds in which it trades lose. The naive books never trade and are shown for completeness.
+Turnover explains the result. A book that is rebuilt every five days from a prediction with almost no persistence turns over between 98 and 147 units of capital a year, so at 10 basis points per unit traded the cost drag is between 10 and 15 percentage points of annual return. The break-even cost at which a strategy's net return would be zero is, to first order, its gross annual return divided by its annual turnover: about 10 basis points for the LSTM on rank ($10.2\%/98$), 7 for ridge on rank, 4 for PatchTST on rank, and 1 to 3 for the two neural direction books; the logistic and LightGBM direction books lose money before costs, so no cost level makes them profitable. Only the LSTM's rank book is priced at roughly its break-even, which is why it ends flat; the others are below it. The gross Sharpe ratios tell the same story from the other side: the highest, $0.51\pm0.22$ for the LSTM on rank, is below SPY's $0.83$, and PatchTST's gross Sharpe on rank ($0.29\pm0.39$) has a seed range that spans zero. LightGBM's direction book trades 6.5 units of capital a year because its predictions are constant across names on most dates; the dates on which it does trade lose. The naive books never trade and are shown for completeness.
 
 \subsection{Seed stability}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\small
 \caption{Pooled primary metric and net Sharpe ratio by seed for the two neural models.}
 \label{tab:seeds}
 \input{tables/seeds}
-\end{table}
+\end{table*}
 
-Table~\ref{tab:seeds} shows the three seeds of each neural model individually. On volatility the three seeds of each model lie within $0.01$ RMSE of one another, an order of magnitude less than the gap to the random walk and less than the gap between the LSTM and the other models, so the comparison with LightGBM and ridge is not sensitive to initialisation. On direction the seeds agree on being below the base rate. On rank the seed spread is larger than the mean for PatchTST (IC between $-0.01$ and $+0.02$) and the net Sharpe ratios of both models span zero; the single LSTM seed with a positive net Sharpe of $+0.28$ would, if reported alone, suggest a marginally profitable strategy, which illustrates why a multi-seed protocol is necessary for this class of claim.
+Table~\ref{tab:seeds} shows the three seeds of each neural model individually. On volatility the three seeds of each model lie within about $0.01$ RMSE of one another, an order of magnitude less than the gap to the random walk and less than the gap between the LSTM and the other models, so the comparison with LightGBM and ridge is not sensitive to initialisation. On direction the seeds agree on being below the base rate. On rank the seed spread is larger than the mean for PatchTST (rank IC between $-0.012$ and $+0.013$) and the net Sharpe ratios of both models span zero; either of the two LSTM seeds with a positive net Sharpe ($+0.22$ and $+0.28$) would, if reported alone, suggest a marginally profitable strategy, which illustrates why a multi-seed protocol is necessary for this class of claim.
 
 \subsection{Computational cost}
 
-The three baselines fit all 33 task-folds in under a minute in total. The LSTM fits in 8 to 15 seconds each. PatchTST fits took a median of 250 seconds on the direction task, 330 seconds on volatility and 500 seconds on rank (the rank fits ran more epochs before early stopping), and the 99 PatchTST fits account for about nine of the ten hours of a full run on an Apple M5 laptop. Each fit's predictions are cached to disk so that an interrupted run resumes at the fit that was in flight.
+The three baselines fit all 33 task-folds in under a minute in total. The LSTM fits in 7 to 24 seconds each, 9 at the median. PatchTST fits took a median of 360 seconds on the direction task, 330 seconds on volatility and 490 seconds on rank (the rank fits ran more epochs before early stopping), and the 99 PatchTST fits account for about 11.3 of the 11.6 hours of fitting in a full run on an Apple M5 laptop (timings taken from the write times of the fit cache). Each fit's predictions are cached to disk so that an interrupted run resumes at the fit that was in flight.
 
 \section{Discussion}\label{sec:discussion}
 
-\paragraph{Why the transformer does not help.} Three features of the problem make it unfavourable to a sequence encoder of this kind. First, the hand-built features already summarise the lookback window: lagged returns at six horizons, realised volatility at three, momentum oscillators and a drawdown statistic are the quantities a patch encoder would have to rediscover from raw channels, and the linear and tree models receive them directly. The sequence models receive the same 43 channels as a window and must learn, from about 55{,}000 windows per fold with high noise, which of the $64\times43$ inputs matter; on the volatility target, where the answer is ``the recent realised-volatility channels, shrunk'', PatchTST learns it well enough to match LightGBM, and on the two return targets, where there may be nothing to learn, it fits noise. Second, channel independence is the right inductive bias for the benchmarks on which PatchTST was developed but it discards cross-channel structure at the encoder level; only the final linear mixer combines channels, so interactions such as ``high VIX and negative momentum'' are available to LightGBM but not to the encoder. Third, the effective sample is small. Five-day returns on 46 correlated names over five years provide far fewer independent observations than the row count suggests, and the regularisation that early stopping provides (most fits stopped by the second or third epoch) is coarse.
+\paragraph{Why the transformer does not help.} Three features of the problem make it unfavourable to a sequence encoder of this kind. First, the hand-built features already summarise the lookback window: lagged returns at six horizons, realised volatility at three, momentum oscillators and a drawdown statistic are the quantities a patch encoder would have to rediscover from raw channels, and the linear and tree models receive them directly. The sequence models receive the same 43 channels as a window and must learn, from about 55{,}000 windows per fold with high noise, which of the $64\times43$ inputs matter; on the volatility target, where the answer is ``the recent realised-volatility channels, shrunk'', PatchTST learns it well enough to match LightGBM, and on the two return targets, where there may be nothing to learn, it fits noise. Second, channel independence is the right inductive bias for the benchmarks on which PatchTST was developed but it discards cross-channel structure at the encoder level; only the final linear mixer combines channels, so interactions such as ``high VIX and negative momentum'' are available to LightGBM but not to the encoder. Third, the effective sample is small. Five-day returns on 46 correlated names over five years provide far fewer independent observations than the row count suggests, and the regularisation that early stopping provides is coarse.
 
 \paragraph{The volatility result in context.} That ridge regression wins on volatility is consistent with the long record of simple, heavily parameterised-by-hand models in this literature \citep{corsi2009simple,hansen2005forecast}. The random-walk naive is a weak benchmark for a five-day realised measure; the unconditional training mean would score an RMSE of about $0.62$, still well above every model, and a HAR-style regression on the three realised-volatility features alone would likely capture most of ridge's gain. The practically relevant finding is that the ordering ridge $<$ LightGBM $\approx$ PatchTST $<$ LSTM $\ll$ naive is stable across seeds and is only disturbed by the 2020 regime break, in which the simplest model degrades least.
 
@@ -276,12 +302,12 @@ The three baselines fit all 33 task-folds in under a minute in total. The LSTM f
 \begin{itemize}[leftmargin=1.4em]
 \item \textbf{Survivorship.} The universe is a hindsight selection of today's large caps (Section~\ref{sec:data}); absolute levels of the base rate, of SPY and of every book are inflated.
 \item \textbf{Single vendor, adjusted prices.} Yahoo Finance adjusted closes are the only source; corporate actions are handled by the vendor's adjustment factors and were not audited.
-\item \textbf{Fixed hyperparameters.} The neural architectures and training schedule were fixed before the test folds were scored and were not tuned on validation loss beyond early stopping. A larger search might improve PatchTST on volatility; it is unlikely to create a direction or rank signal where early stopping found none at epoch one.
+\item \textbf{Fixed hyperparameters.} The neural architectures and training schedule were fixed before the test folds were scored and were not tuned on validation loss beyond early stopping. A larger search might improve PatchTST on volatility; it is unlikely to create a direction or rank signal where none of the five models found one.
 \item \textbf{No refit on train plus validation.} Models are tested with the weights obtained on the training block alone; refitting on train and validation with the selected hyperparameters is common practice and would add six months of data to each fit.
 \item \textbf{Asymmetric lookback convention.} Test windows may reach back into the validation block (Section~\ref{sec:walkforward}); this is live-trading information and not leakage, but it is a choice.
 \item \textbf{Backtest simplifications.} Daily reset to target weights, no intra-period drift, no risk-free rate or short rebate, no borrow constraints, and a flat cost per unit traded. Drawdowns are on a book with two dollars of gross exposure per dollar of capital.
-\item \textbf{No multiple-comparison correction.} Fifteen model-task pairs are tested against two baselines. Every significant result favours the simpler model, so a correction would not change the conclusions, but the marginal rank IC $t$-statistic of $2.1$ for the LSTM should be read with that in mind \citep{harvey2016cross}.
-\item \textbf{One hardware path.} Neural results were produced on an Apple GPU; bitwise reproducibility was observed on that device but is not guaranteed by the framework across devices.
+\item \textbf{No multiple-comparison correction.} Fifteen model-task pairs are tested against two baselines. Apart from every model's gain over the random-walk volatility forecast, every significant result favours the simpler model, so a correction would not change the conclusions, but the marginal rank IC $t$-statistic of $2.1$ for the LSTM should be read with that in mind \citep{harvey2016cross}.
+\item \textbf{One hardware path.} Neural results were produced on an Apple GPU, and the framework does not guarantee bitwise reproducibility across devices.
 \end{itemize}
 
 \section{Conclusion}\label{sec:conclusion}
@@ -299,34 +325,36 @@ The \metantickers{} tradable names, by Yahoo Finance ticker: \input{tables/unive
 
 \section{Per-fold results}\label{app:folds}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\small
 \caption{Volatility RMSE by test fold, seed-averaged; the last row pools all test samples.}
 \input{tables/folds_vol}
-\end{table}
+\end{table*}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\small
 \caption{Direction accuracy by test fold, seed-averaged.}
 \input{tables/folds_dir}
-\end{table}
+\end{table*}
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering\small
 \caption{Rank IC by test fold, seed-averaged.}
 \input{tables/folds_rank}
-\end{table}
+\end{table*}
 
 \section{Reproduction}\label{app:repro}
 
-The experiment is the configuration \texttt{configs/exp02.yaml} of the \texttt{stockbench} repository at revision \texttt{\metasha}; its SHA-256 configuration hash is \texttt{\metaconfighash}. Software: Python \metavpython, NumPy \metavnumpy, pandas \metavpandas, scikit-learn \metavscikitlearn, LightGBM \metavlightgbm, statsmodels \metavstatsmodels, PyTorch \metavtorch, yfinance \metavyfinance. The run is reproduced with
+The code and this document are at \href{https://github.com/xeij/transformers-stocks}{\texttt{github.com/xeij/transformers-stocks}}. The experiment is the configuration \texttt{configs/exp02.yaml} of that repository (package \texttt{stockbench}) at revision \texttt{\metasha}; its SHA-256 configuration hash is \texttt{\metaconfighash}. Software: Python \metavpython, NumPy \metavnumpy, pandas \metavpandas, scikit-learn \metavscikitlearn, LightGBM \metavlightgbm, statsmodels \metavstatsmodels, PyTorch \metavtorch, yfinance \metavyfinance. The run is reproduced with
+{\footnotesize
 \begin{verbatim}
 uv sync
-sh scripts/fix_macos_venv.sh          # macOS only
-uv run pytest                         # leakage and unit tests, 39 cases
-uv run python -m stockbench run --config configs/exp02.yaml
-uv run python scripts/build_paper.py  # tables, figures and this document
-\end{verbatim}
-The run writes \texttt{reports/exp02/}: per-sample predictions, the metric and Diebold--Mariano tables, the backtest tables and daily return series, the figures, a Markdown summary and a manifest with the configuration, git revision, data range and library versions. Each of the 297 fits is cached as one Parquet file under \texttt{reports/exp02/cache/}, keyed by task, fold, model, seed and a hash of the fit-relevant configuration, so an interrupted run resumes and a change to the evaluation code alone re-renders the report in under a minute. Every table and figure in this document is generated from those files by \texttt{scripts/build\_paper.py}; no number is typed by hand.
+sh scripts/fix_macos_venv.sh   # macOS only
+uv run pytest                  # 39 cases
+uv run python -m stockbench run \
+    --config configs/exp02.yaml
+uv run python scripts/build_paper.py
+\end{verbatim}}
+The run writes \texttt{reports/exp02/}: per-sample predictions, the metric and Diebold--Mariano tables, the backtest tables and daily return series, the figures, a Markdown summary and a manifest with the configuration, git revision, data range and library versions. Each of the 297 fits is cached as one Parquet file under \texttt{reports/exp02/cache/}, keyed by task, fold, model, seed and a hash of the fit-relevant configuration, so an interrupted run resumes and a change to the evaluation code alone re-renders the report in under a minute. Every table and figure in this document is generated from those files by \texttt{scripts/build\_paper.py}.
 
 \end{document}
