@@ -8,4 +8,3 @@ __pycache__/
 .DS_Store
 reports/*/predictions.parquet
 reports/*/cache/
-reports/*/backtest_daily.parquet
